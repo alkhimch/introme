@@ -1,0 +1,87 @@
+<template>
+	<div fluid class="index-container flex center middle">
+		<div class="main-wrapper">
+			<b-row>
+				<b-col>
+					<div class="flex center mr-15">
+						<div class="flex column tw mr-1rem center left-wrapper">
+							<h1 class="l-text" :class="{ show: count > 0 }">I am</h1>
+						</div>
+						<div class="divider" :class="{ show: count > 0 }"></div>
+						<div class="flex column ml-1rem tw right-wrapper">
+							<h1 class="r-text" :class="{ show: count > 1 }">Shinenbayar</h1>
+							<h1 class="r-text" :class="{ show: count > 2 }">Alkhimch</h1>
+							<h1 class="r-text" :class="{ show: count > 3 }">
+								Brother of two
+							</h1>
+							<h1 class="r-text" :class="{ show: count > 4 }">Developer</h1>
+							<h1 class="r-text" :class="{ show: count > 5 }">Mathematician</h1>
+							<h1 class="r-text" :class="{ show: count > 6 }">Photographer</h1>
+						</div>
+					</div>
+				</b-col>
+			</b-row>
+		</div>
+	</div>
+</template>
+
+<script>
+export default {
+	name: 'IndexPage',
+	created() {
+		setInterval(() => {
+			if (this.count < 8) this.count = this.count + 1
+		}, 500)
+	},
+	data() {
+		return {
+			count: 0,
+		}
+	},
+}
+</script>
+<style lang="scss" scoped>
+.index-container {
+	.main-wrapper {
+		margin-top: auto;
+		margin-bottom: auto;
+		white-space: nowrap;
+		.divider {
+			border-right: solid 1px #fff;
+			display: none;
+			&.show {
+				display: block;
+			}
+		}
+	}
+	height: 100vh;
+}
+.left-wrapper {
+	position: relative;
+	z-index: 1;
+	overflow: hidden;
+	.l-text {
+		transition: all ease-in-out 0.25s;
+		transform: translateX(200%);
+		&.show {
+			overflow: visible;
+			transform: translateX(0);
+			z-index: 0;
+		}
+	}
+}
+.right-wrapper {
+	z-index: 1;
+	position: relative;
+	overflow: hidden;
+	.r-text {
+		transition: all ease-in-out 0.25s;
+		transform: translateX(-100%);
+		&.show {
+			overflow: visible;
+			transform: translateX(0);
+			z-index: 0;
+		}
+	}
+}
+</style>

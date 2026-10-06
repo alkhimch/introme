@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
-import { COLLIDERS, SPAWN, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
+import { CAMERA_OFFSET, COLLIDERS, SPAWN, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
 import { car, commands, input } from './store'
 
 const MAX_SPEED = 20, MAX_REVERSE = -8, ACCEL = 16, BRAKE = 34, TURN = 2.1
@@ -153,7 +153,7 @@ export default function Car({ mobile }) {
     camPos: new THREE.Vector3(), look: new THREE.Vector3(), lookSmooth: new THREE.Vector3(SPAWN.x, 0, SPAWN.z),
   }), [])
   const snap = useRef(true)
-  const offset = useMemo(() => (mobile ? new THREE.Vector3(9, 19, 21) : new THREE.Vector3(7, 13, 15.5)), [mobile])
+  const offset = useMemo(() => new THREE.Vector3(...(mobile ? CAMERA_OFFSET.mobile : CAMERA_OFFSET.desktop)), [mobile])
   const steerRef = useRef(0)
   const resetSeen = useRef(0)
 

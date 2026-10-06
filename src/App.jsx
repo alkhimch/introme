@@ -3,6 +3,7 @@ import { photos, profile } from './content'
 import { usePhotoSources } from './photos'
 import Lightbox from './components/Lightbox'
 import Panel from './components/Panel'
+import Radar from './components/Radar'
 import TouchControls from './components/TouchControls'
 import useKeyboard from './components/useKeyboard'
 import { commands, setStarted, useStarted, useToast, useZone } from './world/store'
@@ -61,6 +62,7 @@ export default function App() {
         </div>
       )}
       {started && isTouch && <TouchControls />}
+      {started && <Radar mobile={isMobile} />}
 
       <div className={'intro' + (started ? ' gone' : '')} aria-hidden={started}>
         <div className="intro-card">

@@ -132,3 +132,6 @@ export const COLLIDERS = [
   ...CONTACT_SIGNS.map((s) => ({ x: s.x, z: s.z, r: 0.45 })),
   { x: SIGNPOST.x, z: SIGNPOST.z, r: 0.4 },
 ]
+
+// Follow-camera offset from the van (fixed orientation, Bruno-style).
+export const CAMERA_OFFSET = { desktop: [7, 13, 15.5], mobile: [9, 19, 21] }

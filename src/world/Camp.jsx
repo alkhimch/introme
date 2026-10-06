@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { CAMP, SWING, WOMAN, height } from './layout'
+import { CAMP, CHILD, DOG_HOME, SWING, WOMAN, campLocal, height } from './layout'
 import { car } from './store'
 
 const Std = (props) => <meshStandardMaterial flatShading roughness={0.9} {...props} />
@@ -41,52 +41,78 @@ function Window({ position, ry = 0 }) {
 
 function Cabin() {
   const tex = useMemo(logTexture, [])
-  const W = 7, D = 4.6, H = 2.8, roofH = 1.9
+  // Two storeys: ground floor F1 + upper floor F2.
+  const W = 7, D = 4.6, F1 = 2.8, F2 = 2.6, H = F1 + F2, roofH = 1.9, base = 0.4
   const slope = Math.hypot(D / 2 + 0.5, roofH), ang = Math.atan2(roofH, D / 2 + 0.5)
   const gable = useMemo(() => {
     const sh = new THREE.Shape()
     sh.moveTo(-D / 2, 0); sh.lineTo(D / 2, 0); sh.lineTo(0, roofH); sh.closePath()
     return new THREE.ShapeGeometry(sh)
   }, [D, roofH])
+  const wallTex = useMemo(() => { const t = tex.clone(); t.repeat.set(4, 2.6); t.needsUpdate = true; return t }, [tex])
   const y = height(CAMP.x, CAMP.z)
+  const upper = base + F1 + 0.12
   return (
     <group position={[CAMP.x, y, CAMP.z]} rotation={[0, CAMP.ry, 0]}>
       {/* Stone foundation + log walls */}
       <mesh position={[0, 0.2, 0]} receiveShadow castShadow><boxGeometry args={[W + 0.3, 0.4, D + 0.3]} /><Std color="#8e8a80" /></mesh>
-      <mesh position={[0, 0.4 + H / 2, 0]} castShadow receiveShadow>
+      <mesh position={[0, base + H / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[W, H, D]} />
-        <meshStandardMaterial map={tex} roughness={0.95} />
+        <meshStandardMaterial map={wallTex} roughness={0.95} />
       </mesh>
+      {/* Beam between the floors */}
+      <mesh position={[0, base + F1, 0]} castShadow><boxGeometry args={[W + 0.12, 0.22, D + 0.12]} /><Std color="#6a4426" /></mesh>
+      {/* Corner posts */}
+      {[[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([sx, sz]) => (
+        <mesh key={`${sx}${sz}`} position={[sx * W / 2, base + H / 2, sz * D / 2]}><boxGeometry args={[0.22, H, 0.22]} /><Std color="#6a4426" /></mesh>
+      ))}
       {/* Gable ends */}
       {[-1, 1].map((side) => (
-        <mesh key={side} geometry={gable} position={[side * (W / 2 + 0.001), 0.4 + H, 0]} rotation={[0, side * Math.PI / 2, 0]}>
+        <mesh key={side} geometry={gable} position={[side * (W / 2 + 0.001), base + H, 0]} rotation={[0, side * Math.PI / 2, 0]}>
           <meshStandardMaterial map={tex} roughness={0.95} side={THREE.DoubleSide} />
         </mesh>
       ))}
       {/* Red roof */}
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[0, 0.4 + H + roofH / 2, side * (D / 4 + 0.25)]} rotation={[side * ang, 0, 0]} castShadow>
+        <mesh key={side} position={[0, base + H + roofH / 2, side * (D / 4 + 0.25)]} rotation={[side * ang, 0, 0]} castShadow>
           <boxGeometry args={[W + 0.9, 0.14, slope]} />
           <Std color="#b5432f" />
         </mesh>
       ))}
-      <mesh position={[0, 0.4 + H + roofH + 0.05, 0]}><boxGeometry args={[W + 0.95, 0.16, 0.24]} /><Std color="#8c2f21" /></mesh>
+      <mesh position={[0, base + H + roofH + 0.05, 0]}><boxGeometry args={[W + 0.95, 0.16, 0.24]} /><Std color="#8c2f21" /></mesh>
       {/* Chimney */}
-      <mesh position={[W / 2 - 1.3, 0.4 + H + roofH * 0.9, -0.6]} castShadow><boxGeometry args={[0.55, 1.6, 0.55]} /><Std color="#9a5a44" /></mesh>
-      {/* Door, porch, steps */}
-      <mesh position={[0, 0.4 + 1.05, D / 2 + 0.03]}><boxGeometry args={[1.1, 2.1, 0.08]} /><Std color="#3d6fa8" /></mesh>
-      <mesh position={[0.35, 0.4 + 1.05, D / 2 + 0.09]}><sphereGeometry args={[0.06, 8, 6]} /><meshStandardMaterial color="#e2c25a" metalness={0.6} roughness={0.3} /></mesh>
+      <mesh position={[W / 2 - 1.3, base + H + roofH * 0.9, -0.6]} castShadow><boxGeometry args={[0.55, 1.6, 0.55]} /><Std color="#9a5a44" /></mesh>
+      {/* Ground floor: door, porch, steps */}
+      <mesh position={[0, base + 1.05, D / 2 + 0.03]}><boxGeometry args={[1.1, 2.1, 0.08]} /><Std color="#3d6fa8" /></mesh>
+      <mesh position={[0.35, base + 1.05, D / 2 + 0.09]}><sphereGeometry args={[0.06, 8, 6]} /><meshStandardMaterial color="#e2c25a" metalness={0.6} roughness={0.3} /></mesh>
       <mesh position={[0, 0.45, D / 2 + 0.9]} castShadow receiveShadow><boxGeometry args={[3.2, 0.12, 1.7]} /><Std color="#9b6a3e" /></mesh>
       <mesh position={[0, 0.22, D / 2 + 2.0]} receiveShadow><boxGeometry args={[1.6, 0.12, 0.5]} /><Std color="#8a5d36" /></mesh>
       {[-1.5, 1.5].map((x) => (
-        <mesh key={x} position={[x, 0.4 + 1.3, D / 2 + 1.65]} castShadow><boxGeometry args={[0.14, 2.6, 0.14]} /><Std color="#7a4f2c" /></mesh>
+        <mesh key={x} position={[x, base + F1 / 2, D / 2 + 1.65]} castShadow><boxGeometry args={[0.14, F1, 0.14]} /><Std color="#7a4f2c" /></mesh>
       ))}
-      <mesh position={[0, 0.4 + 2.65, D / 2 + 0.95]} rotation={[0.25, 0, 0]} castShadow><boxGeometry args={[3.6, 0.1, 1.9]} /><Std color="#b5432f" /></mesh>
-      {/* Windows */}
-      <Window position={[-2.3, 0.4 + 1.5, D / 2 + 0.03]} />
-      <Window position={[2.3, 0.4 + 1.5, D / 2 + 0.03]} />
-      <Window position={[W / 2 + 0.03, 0.4 + 1.5, 0]} ry={Math.PI / 2} />
-      <Window position={[-W / 2 - 0.03, 0.4 + 1.5, 0]} ry={-Math.PI / 2} />
+      {/* Upper floor: balcony over the porch, with railing and a door */}
+      <mesh position={[0, upper, D / 2 + 0.9]} castShadow receiveShadow><boxGeometry args={[3.4, 0.14, 1.85]} /><Std color="#9b6a3e" /></mesh>
+      <mesh position={[0, upper + 0.9, D / 2 + 1.78]}><boxGeometry args={[3.4, 0.08, 0.08]} /><Std color="#f4efe4" /></mesh>
+      {[-1, 1].map((sd) => (
+        <mesh key={sd} position={[sd * 1.68, upper + 0.9, D / 2 + 0.9]}><boxGeometry args={[0.08, 0.08, 1.8]} /><Std color="#f4efe4" /></mesh>
+      ))}
+      {Array.from({ length: 13 }, (_, i) => -1.62 + i * 0.27).map((x) => (
+        <mesh key={x} position={[x, upper + 0.45, D / 2 + 1.78]}><boxGeometry args={[0.05, 0.85, 0.05]} /><Std color="#f4efe4" /></mesh>
+      ))}
+      {[-1, 1].flatMap((sd) => [0.35, 0.8, 1.25].map((z) => (
+        <mesh key={`${sd}${z}`} position={[sd * 1.68, upper + 0.45, D / 2 + z]}><boxGeometry args={[0.05, 0.85, 0.05]} /><Std color="#f4efe4" /></mesh>
+      )))}
+      <mesh position={[0, upper + 1.0, D / 2 + 0.03]}><boxGeometry args={[1.0, 1.9, 0.08]} /><Std color="#3d6fa8" /></mesh>
+      {/* Windows: ground floor and upper floor */}
+      <Window position={[-2.3, base + 1.5, D / 2 + 0.03]} />
+      <Window position={[2.3, base + 1.5, D / 2 + 0.03]} />
+      <Window position={[-2.3, upper + 1.2, D / 2 + 0.03]} />
+      <Window position={[2.3, upper + 1.2, D / 2 + 0.03]} />
+      {[base + 1.5, upper + 1.2].flatMap((wy) => [
+        <Window key={`r${wy}`} position={[W / 2 + 0.03, wy, 0]} ry={Math.PI / 2} />,
+        <Window key={`l${wy}`} position={[-W / 2 - 0.03, wy, 0]} ry={-Math.PI / 2} />,
+      ])}
+      <Window position={[0, base + H + 0.75, D / 2 - 0.9]} />
       {/* A little bench by the door */}
       <mesh position={[-2.6, 0.8, D / 2 + 0.6]} castShadow><boxGeometry args={[1.4, 0.1, 0.45]} /><Std color="#7a4f2c" /></mesh>
       {[-3.2, -2.0].map((x) => (
@@ -133,12 +159,13 @@ function Swing() {
   )
 }
 
-// A woman in a blue deel with a golden sash; she turns and waves when the van comes by.
-function Woman() {
+// A person in a deel who turns towards the van and waves when it comes close.
+// Used for the woman and (scaled down, with a pointed hat and little hops) the child.
+function Person({ spot, scale = 1, deelColor, sashColor, braid = false, hat = false, hop = false, waveSpeed = 7 }) {
   const root = useRef()
   const arm = useRef()
   const body = useRef()
-  const y = height(WOMAN.x, WOMAN.z)
+  const y = height(spot.x, spot.z)
   const deel = useMemo(() => {
     const pts = [[0.0, 0], [0.36, 0], [0.33, 0.35], [0.27, 0.75], [0.22, 0.95], [0.25, 1.2], [0.2, 1.38], [0.08, 1.45], [0, 1.45]]
     return new THREE.LatheGeometry(pts.map(([r, h]) => new THREE.Vector2(r, h)), 14)
@@ -147,54 +174,120 @@ function Woman() {
   useFrame((st, delta) => {
     const dt = Math.min(delta, 1 / 30)
     const t = st.clock.elapsedTime
-    const dx = car.x - WOMAN.x, dz = car.z - WOMAN.z, d = Math.hypot(dx, dz)
+    const dx = car.x - spot.x, dz = car.z - spot.z, d = Math.hypot(dx, dz)
     const near = d < 15
     const s = state.current
-    // Turn towards the van (relative to her default facing).
-    const target = near ? Math.atan2(dx, dz) - WOMAN.ry : 0
-    let diff = ((target - s.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI
+    const target = near ? Math.atan2(dx, dz) - spot.ry : 0
+    const diff = ((target - s.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI
     s.yaw += diff * Math.min(1, dt * 3)
-    root.current.rotation.y = WOMAN.ry + s.yaw
+    root.current.rotation.y = spot.ry + s.yaw
     s.wave += ((near ? 1 : 0) - s.wave) * Math.min(1, dt * 4)
-    // Raised arm waving side to side; relaxed arm otherwise.
     arm.current.rotation.z = 0.2 + s.wave * 2.3
-    arm.current.rotation.x = s.wave * Math.sin(t * 7) * 0.35
-    body.current.position.y = Math.sin(t * 1.6) * 0.008
+    arm.current.rotation.x = s.wave * Math.sin(t * waveSpeed) * 0.35
+    body.current.position.y = hop ? s.wave * Math.abs(Math.sin(t * 6)) * 0.18 : Math.sin(t * 1.6) * 0.008
   })
+  const skin = '#d9a77f', hair = '#1e1714'
   return (
-    <group position={[WOMAN.x, y, WOMAN.z]} ref={root}>
+    <group position={[spot.x, y, spot.z]} ref={root} scale={scale}>
       <group ref={body}>
-        {/* Boots */}
         {[-0.12, 0.12].map((x) => (
           <mesh key={x} position={[x, 0.06, 0.04]} castShadow><boxGeometry args={[0.16, 0.12, 0.3]} /><Std color="#2b2420" /></mesh>
         ))}
-        {/* Deel */}
-        <mesh geometry={deel} position={[0, 0.1, 0]} castShadow><Std color="#2f5fa8" /></mesh>
-        {/* Sash */}
-        <mesh position={[0, 0.1 + 0.95, 0]}><cylinderGeometry args={[0.235, 0.24, 0.16, 14]} /><Std color="#e3a82b" /></mesh>
-        {/* Diagonal trim (enger) */}
-        <mesh position={[0.1, 0.1 + 1.28, 0.17]} rotation={[0.2, 0, -0.6]}><boxGeometry args={[0.04, 0.32, 0.03]} /><Std color="#e3a82b" /></mesh>
-        {/* Neck + head */}
-        <mesh position={[0, 1.62, 0]}><cylinderGeometry args={[0.06, 0.07, 0.12, 8]} /><Std color="#d9a77f" /></mesh>
-        <mesh position={[0, 1.8, 0]} castShadow><sphereGeometry args={[0.17, 12, 10]} /><Std color="#d9a77f" /></mesh>
-        {/* Hair: cap + long braid */}
-        <mesh position={[0, 1.85, -0.02]}><sphereGeometry args={[0.18, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55]} /><Std color="#1e1714" /></mesh>
-        <mesh position={[0, 1.45, -0.17]} rotation={[0.12, 0, 0]}><cylinderGeometry args={[0.045, 0.03, 0.6, 6]} /><Std color="#1e1714" /></mesh>
-        {/* Eyes */}
+        <mesh geometry={deel} position={[0, 0.1, 0]} castShadow><Std color={deelColor} /></mesh>
+        <mesh position={[0, 0.1 + 0.95, 0]}><cylinderGeometry args={[0.235, 0.24, 0.16, 14]} /><Std color={sashColor} /></mesh>
+        <mesh position={[0.1, 0.1 + 1.28, 0.17]} rotation={[0.2, 0, -0.6]}><boxGeometry args={[0.04, 0.32, 0.03]} /><Std color={sashColor} /></mesh>
+        <mesh position={[0, 1.62, 0]}><cylinderGeometry args={[0.06, 0.07, 0.12, 8]} /><Std color={skin} /></mesh>
+        <mesh position={[0, 1.8, 0]} castShadow><sphereGeometry args={[0.17, 12, 10]} /><Std color={skin} /></mesh>
+        <mesh position={[0, 1.85, -0.02]}><sphereGeometry args={[0.18, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55]} /><Std color={hair} /></mesh>
+        {braid && <mesh position={[0, 1.45, -0.17]} rotation={[0.12, 0, 0]}><cylinderGeometry args={[0.045, 0.03, 0.6, 6]} /><Std color={hair} /></mesh>}
+        {hat && (
+          <group position={[0, 1.93, 0]}>
+            <mesh><cylinderGeometry args={[0.21, 0.21, 0.08, 14]} /><Std color="#2b2420" /></mesh>
+            <mesh position={[0, 0.17, 0]}><coneGeometry args={[0.17, 0.3, 12]} /><Std color="#c8423b" /></mesh>
+            <mesh position={[0, 0.34, 0]}><sphereGeometry args={[0.035, 6, 4]} /><Std color="#f2c94c" /></mesh>
+          </group>
+        )}
         {[-0.06, 0.06].map((x) => (
-          <mesh key={x} position={[x, 1.82, 0.155]}><sphereGeometry args={[0.018, 6, 4]} /><meshBasicMaterial color="#1e1714" /></mesh>
+          <mesh key={x} position={[x, 1.82, 0.155]}><sphereGeometry args={[0.018, 6, 4]} /><meshBasicMaterial color={hair} /></mesh>
         ))}
-        {/* Left arm (relaxed) */}
         <group position={[-0.24, 1.42, 0]} rotation={[0, 0, -0.2]}>
-          <mesh position={[0, -0.3, 0]} castShadow><cylinderGeometry args={[0.06, 0.07, 0.6, 7]} /><Std color="#2f5fa8" /></mesh>
-          <mesh position={[0, -0.63, 0]}><sphereGeometry args={[0.055, 8, 6]} /><Std color="#d9a77f" /></mesh>
+          <mesh position={[0, -0.3, 0]} castShadow><cylinderGeometry args={[0.06, 0.07, 0.6, 7]} /><Std color={deelColor} /></mesh>
+          <mesh position={[0, -0.63, 0]}><sphereGeometry args={[0.055, 8, 6]} /><Std color={skin} /></mesh>
         </group>
-        {/* Right arm (waves) */}
         <group ref={arm} position={[0.24, 1.42, 0]}>
-          <mesh position={[0, -0.3, 0]} castShadow><cylinderGeometry args={[0.06, 0.07, 0.6, 7]} /><Std color="#2f5fa8" /></mesh>
-          <mesh position={[0, -0.63, 0]}><sphereGeometry args={[0.055, 8, 6]} /><Std color="#d9a77f" /></mesh>
+          <mesh position={[0, -0.3, 0]} castShadow><cylinderGeometry args={[0.06, 0.07, 0.6, 7]} /><Std color={deelColor} /></mesh>
+          <mesh position={[0, -0.63, 0]}><sphereGeometry args={[0.055, 8, 6]} /><Std color={skin} /></mesh>
         </group>
       </group>
+    </group>
+  )
+}
+
+// A fluffy little dog that never stops running laps of the camp yard —
+// and runs circles around the van whenever it visits.
+function Dog() {
+  const root = useRef()
+  const legs = useRef([])
+  const tail = useRef()
+  const head = useRef()
+  const s = useRef({ x: DOG_HOME.x, z: DOG_HOME.z, heading: 0, phase: 0, t: 0 })
+  useFrame((st, delta) => {
+    const dt = Math.min(delta, 1 / 30)
+    const d = s.current
+    d.t += dt
+    const vanDist = Math.hypot(car.x - DOG_HOME.x, car.z - DOG_HOME.z)
+    let tx, tz
+    if (vanDist < 16) {
+      // Orbit the van at a safe distance.
+      const a = d.t * 1.3
+      tx = car.x + Math.cos(a) * 4.2; tz = car.z + Math.sin(a) * 4.2
+    } else {
+      // Figure-of-eight laps around the yard.
+      const a = d.t * 0.55
+      const p = campLocal(0.5 + Math.sin(a) * 6, 11 + Math.sin(a * 2) * 2.5)
+      tx = p.x; tz = p.z
+    }
+    const dx = tx - d.x, dz = tz - d.z, dist = Math.hypot(dx, dz)
+    const speed = Math.min(7, dist * 3)
+    if (dist > 0.05) {
+      const want = Math.atan2(dx, dz)
+      const diff = ((want - d.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI
+      d.heading += diff * Math.min(1, dt * 8)
+      d.x += Math.sin(d.heading) * speed * dt
+      d.z += Math.cos(d.heading) * speed * dt
+    }
+    d.phase += speed * dt * 3.2
+    const hop = Math.abs(Math.sin(d.phase)) * 0.09 * Math.min(1, speed / 3)
+    root.current.position.set(d.x, height(d.x, d.z) + hop, d.z)
+    root.current.rotation.y = d.heading
+    legs.current.forEach((l, i) => { if (l) l.rotation.x = Math.sin(d.phase + (i < 2 ? 0 : Math.PI)) * 0.8 * Math.min(1, speed / 2) })
+    tail.current.rotation.z = Math.sin(st.clock.elapsedTime * 18) * 0.6
+    head.current.rotation.x = Math.sin(d.phase) * 0.06
+  })
+  const fur = '#d9a35a', cream = '#f6ead5'
+  return (
+    <group ref={root}>
+      <mesh position={[0, 0.42, 0]} castShadow><boxGeometry args={[0.38, 0.32, 0.72]} /><Std color={fur} /></mesh>
+      <mesh position={[0, 0.36, 0.2]}><boxGeometry args={[0.3, 0.22, 0.3]} /><Std color={cream} /></mesh>
+      <group ref={head} position={[0, 0.66, 0.38]}>
+        <mesh castShadow><boxGeometry args={[0.32, 0.3, 0.3]} /><Std color={fur} /></mesh>
+        <mesh position={[0, -0.06, 0.2]}><boxGeometry args={[0.18, 0.14, 0.16]} /><Std color={cream} /></mesh>
+        <mesh position={[0, -0.02, 0.29]}><boxGeometry args={[0.07, 0.06, 0.03]} /><meshBasicMaterial color="#1e1714" /></mesh>
+        {[-0.09, 0.09].map((x) => (
+          <mesh key={x} position={[x, 0.05, 0.155]}><boxGeometry args={[0.04, 0.05, 0.01]} /><meshBasicMaterial color="#1e1714" /></mesh>
+        ))}
+        {[-0.1, 0.1].map((x) => (
+          <mesh key={x} position={[x, 0.21, -0.02]} rotation={[0, 0, x > 0 ? -0.2 : 0.2]}><coneGeometry args={[0.07, 0.16, 4]} /><Std color="#b97f3d" /></mesh>
+        ))}
+      </group>
+      <group ref={tail} position={[0, 0.58, -0.36]}>
+        <mesh position={[0, 0.1, -0.04]} rotation={[-0.5, 0, 0]}><torusGeometry args={[0.1, 0.045, 5, 8, Math.PI * 1.4]} /><Std color={fur} /></mesh>
+      </group>
+      {[[-0.12, 0.25], [0.12, 0.25], [-0.12, -0.25], [0.12, -0.25]].map(([x, z], i) => (
+        <group key={i} ref={(el) => (legs.current[i] = el)} position={[x, 0.3, z]}>
+          <mesh position={[0, -0.14, 0]}><boxGeometry args={[0.09, 0.28, 0.09]} /><Std color={i < 2 ? cream : fur} /></mesh>
+        </group>
+      ))}
     </group>
   )
 }
@@ -204,7 +297,9 @@ export default function Camp() {
     <group>
       <Cabin />
       <Swing />
-      <Woman />
+      <Person spot={WOMAN} deelColor="#2f5fa8" sashColor="#e3a82b" braid />
+      <Person spot={CHILD} scale={0.58} deelColor="#c8423b" sashColor="#f2c94c" hat hop waveSpeed={10} />
+      <Dog />
     </group>
   )
 }

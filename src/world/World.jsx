@@ -11,6 +11,7 @@ import Zones from './Zones'
 import Hobbies from './Hobbies'
 import OrbitInput from './OrbitInput'
 import Camp from './Camp'
+import Herds from './Herds'
 
 export default function World({ photos, onOpenPhoto, mobile }) {
   return (
@@ -36,6 +37,7 @@ export default function World({ photos, onOpenPhoto, mobile }) {
         <Landmarks photos={photos} onOpenPhoto={onOpenPhoto} />
         <Hobbies />
         <Camp />
+        <Herds />
       </Suspense>
     </Canvas>
   )

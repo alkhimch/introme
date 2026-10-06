@@ -26,6 +26,12 @@ export function campLocal(lx, lz) {
 }
 export const SWING = { ...campLocal(-5, 6.5), ry: CAMP.ry }
 export const WOMAN = { ...campLocal(1.8, 5.2), ry: CAMP.ry }
+export const CHILD = { ...campLocal(2.55, 5.35), ry: CAMP.ry }
+export const DOG_HOME = campLocal(0.5, 10)
+
+// Pastures for the herds.
+export const HORSE_HOME = { x: 62, z: -8 }
+export const COW_HOME = { x: -58, z: 52 }
 
 // Dirt tracks between places, as polylines of [x, z].
 export const PATHS = [
@@ -136,6 +142,7 @@ export const COLLIDERS = [
   ...[-2.2, 0, 2.2].map((lx) => ({ ...campLocal(lx, 0), r: 2.4 })),
   ...[-1.7, 1.7].map((lx) => ({ ...campLocal(-5 + lx, 6.5), r: 0.3 })),
   { x: WOMAN.x, z: WOMAN.z, r: 0.5 },
+  { x: CHILD.x, z: CHILD.z, r: 0.35 },
   ...STELES.map((s) => ({ x: s.x, z: s.z, r: 1.1 })),
   { x: GOAL.x - GOAL.width / 2, z: GOAL.z, r: 0.3 },
   { x: GOAL.x + GOAL.width / 2, z: GOAL.z, r: 0.3 },

@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import { CAMERA_OFFSET, COLLIDERS, SPAWN, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
-import { car, commands, input } from './store'
+import { camView, car, commands, initCamView, input } from './store'
 
 const MAX_SPEED = 20, MAX_REVERSE = -8, ACCEL = 16, BRAKE = 34, TURN = 2.1
 const CAR_RADIUS = 1.5
@@ -153,7 +153,11 @@ export default function Car({ mobile }) {
     camPos: new THREE.Vector3(), look: new THREE.Vector3(), lookSmooth: new THREE.Vector3(SPAWN.x, 0, SPAWN.z),
   }), [])
   const snap = useRef(true)
-  const offset = useMemo(() => new THREE.Vector3(...(mobile ? CAMERA_OFFSET.mobile : CAMERA_OFFSET.desktop)), [mobile])
+  const offset = useMemo(() => {
+    const o = mobile ? CAMERA_OFFSET.mobile : CAMERA_OFFSET.desktop
+    initCamView(o)
+    return new THREE.Vector3(...o)
+  }, [mobile])
   const steerRef = useRef(0)
   const resetSeen = useRef(0)
 
@@ -246,6 +250,9 @@ export default function Car({ mobile }) {
     })
 
     // ── Camera + sun follow ──
+    // Orbit offset from the drag-controlled yaw / pitch / distance.
+    const cp = Math.cos(camView.pitch)
+    offset.set(Math.sin(camView.yaw) * cp * camView.dist, Math.sin(camView.pitch) * camView.dist, Math.cos(camView.yaw) * cp * camView.dist)
     // Inside a zone, frame the space between the van and the zone's landmarks,
     // and leave room for the info panel (right on desktop, bottom on mobile).
     tmp.look.set(car.x + fx * Math.max(0, car.speed) * 0.25, car.y + 1, car.z + fz * Math.max(0, car.speed) * 0.25)
@@ -260,6 +267,8 @@ export default function Car({ mobile }) {
     const k = snap.current ? 1 : 1 - Math.exp(-dt * 3.2)
     tmp.lookSmooth.lerp(tmp.look, k)
     tmp.camPos.copy(tmp.lookSmooth).add(offset)
+    // Never let a low orbit angle put the camera inside a hill.
+    tmp.camPos.y = Math.max(tmp.camPos.y, height(tmp.camPos.x, tmp.camPos.z) + 1.5)
     camera.position.lerp(tmp.camPos, snap.current ? 1 : 1 - Math.exp(-dt * 4))
     camera.lookAt(tmp.lookSmooth)
     snap.current = false

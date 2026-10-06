@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { CAMERA_OFFSET, GERS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
-import { car, commands, setStarted } from '../world/store'
+import { GERS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
+import { camView, car, commands, setStarted } from '../world/store'
 
 const RANGE = 48 // world units from the van to the radar rim
 const ZONE_STYLE = {
@@ -18,10 +18,7 @@ export default function Radar({ mobile }) {
   useEffect(() => {
     const cv = canvas.current
     const ctx = cv.getContext('2d')
-    const [ox, , oz] = mobile ? CAMERA_OFFSET.mobile : CAMERA_OFFSET.desktop
-    const len = Math.hypot(ox, oz)
-    const fx = -ox / len, fz = -oz / len // world direction that points "up" on screen
-    const rx = -fz, rz = fx // world direction that points "right" on screen
+    let fx = 0, fz = -1, rx = 1, rz = 0
     let raf = 0, size = 0, dpr = 1
 
     const resize = () => {
@@ -34,6 +31,9 @@ export default function Radar({ mobile }) {
 
     const draw = (time) => {
       raf = requestAnimationFrame(draw)
+      // Follow the orbit camera: "up" on the radar is the camera's forward direction.
+      fx = -Math.sin(camView.yaw); fz = -Math.cos(camView.yaw)
+      rx = -fz; rz = fx
       const R = size / 2, scale = (R - 6) / RANGE
       const toScreen = (x, z) => {
         const dx = x - car.x, dz = z - car.z

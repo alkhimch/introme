@@ -9,6 +9,7 @@ import NameLetters from './NameLetters'
 import Landmarks from './Landmarks'
 import Zones from './Zones'
 import Hobbies from './Hobbies'
+import OrbitInput from './OrbitInput'
 
 export default function World({ photos, onOpenPhoto, mobile }) {
   return (
@@ -27,6 +28,7 @@ export default function World({ photos, onOpenPhoto, mobile }) {
       <Terrain />
       <Vegetation mobile={mobile} />
       <Zones />
+      <OrbitInput />
       <Car mobile={mobile} />
       <Suspense fallback={null}>
         <NameLetters />

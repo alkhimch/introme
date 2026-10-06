@@ -30,3 +30,12 @@ export function showToast(text, ms = 2200) {
   toastTimer = setTimeout(() => { toast = null; emit() }, ms)
 }
 export const useToast = () => useSyncExternalStore(subscribe, () => toast)
+
+// Orbit camera around the van, driven by mouse/touch drag. Angles in radians.
+export const camView = { yaw: 0, pitch: 0, dist: 20, defaults: null }
+export function initCamView([x, y, z]) {
+  const dist = Math.hypot(x, y, z)
+  camView.defaults = { yaw: Math.atan2(x, z), pitch: Math.asin(y / dist), dist }
+  Object.assign(camView, camView.defaults)
+}
+export function resetCamView() { if (camView.defaults) Object.assign(camView, camView.defaults) }

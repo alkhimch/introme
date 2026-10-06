@@ -114,7 +114,7 @@ function PhotoFrame({ x, z, ry, index, photo, onOpen }) {
         position={[0, 3.2, 0]}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { setHover(false); document.body.style.cursor = '' }}
-        onClick={(e) => { e.stopPropagation(); onOpen(index) }}
+        onClick={(e) => { e.stopPropagation(); if (e.delta < 6) onOpen(index) }}
       >
         <mesh castShadow>
           <boxGeometry args={[2.4, 2.95, 0.14]} />
@@ -203,7 +203,7 @@ function Signboard({ x, z, ry, text, href }) {
         position={[0, 1.9, 0.1]}
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { setHover(false); document.body.style.cursor = '' }}
-        onClick={(e) => { e.stopPropagation(); window.open(href, '_blank', 'noopener') }}
+        onClick={(e) => { e.stopPropagation(); if (e.delta < 6) window.open(href, '_blank', 'noopener') }}
       >
         <mesh castShadow>
           <boxGeometry args={[2.3, 0.75, 0.12]} />

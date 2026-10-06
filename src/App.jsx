@@ -58,7 +58,7 @@ export default function App() {
 
       {started && !isTouch && (
         <div className="hint" aria-hidden="true">
-          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows to drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset
+          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · drag to look · scroll to zoom
         </div>
       )}
       {started && isTouch && <TouchControls />}
@@ -71,7 +71,7 @@ export default function App() {
           <p className="intro-roles">{profile.roles.join(' · ')}</p>
           <p className="intro-text">Hop in the Purgon and drive across the Mongolian steppe to explore my work.</p>
           <button className="btn primary" onClick={start}>Start driving</button>
-          <p className="intro-small">{isTouch ? 'Use the on-screen pedals to drive.' : 'WASD or arrow keys · or use the menu above.'}</p>
+          <p className="intro-small">{isTouch ? 'Use the on-screen pedals to drive · drag to look around.' : 'WASD or arrow keys · drag to look around · or use the menu above.'}</p>
         </div>
       </div>
 

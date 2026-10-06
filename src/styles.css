@@ -55,9 +55,10 @@ p { margin: 0 0 1em; }
 .hud-top nav .nav-cta { background: var(--blue); color: #fff; }
 @media (max-width: 560px) {
   .hud-top { padding: 10px 10px; gap: 6px; }
-  .logo { font-size: 1.02rem; }
+  .logo { font-size: 0.95rem; }
+  .hud-left { gap: 6px; }
   .hud-top nav { flex-wrap: nowrap; gap: 0; padding: 3px; }
-  .hud-top nav button, .hud-top nav a { padding: 6px 8px; font-size: 0.8rem; white-space: nowrap; }
+  .hud-top nav button, .hud-top nav a { padding: 6px 7px; font-size: 0.78rem; white-space: nowrap; }
   .hud-top nav .nav-cta { display: none; }
 }
 
@@ -189,3 +190,14 @@ kbd {
   .radar { width: 104px; height: 104px; bottom: max(14px, env(safe-area-inset-bottom)); }
 }
 @media (max-width: 1100px) and (pointer: fine) { .hint { display: none; } }
+
+/* Mute */
+.hud-left { display: flex; align-items: center; gap: 10px; }
+.mute {
+  width: 38px; height: 38px; border-radius: 50%; border: 0; display: grid; place-items: center;
+  background: rgba(251, 247, 238, 0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(40, 30, 10, 0.15); color: var(--ink);
+}
+.mute svg { width: 20px; height: 20px; fill: currentColor; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mute[aria-pressed="true"] { color: var(--accent); }
+@media (max-width: 560px) { .mute { width: 32px; height: 32px; } .mute svg { width: 17px; height: 17px; } }

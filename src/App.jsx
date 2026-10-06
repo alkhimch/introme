@@ -4,6 +4,7 @@ import { usePhotoSources } from './photos'
 import Lightbox from './components/Lightbox'
 import Panel from './components/Panel'
 import Radar from './components/Radar'
+import { initAudio, toggleMuted, useMuted } from './audio/sound'
 import TouchControls from './components/TouchControls'
 import useKeyboard from './components/useKeyboard'
 import { commands, setStarted, useStarted, useToast, useZone } from './world/store'
@@ -25,6 +26,18 @@ export default function App() {
   const started = useStarted()
   const zone = useZone()
   const toast = useToast()
+  const muted = useMuted()
+
+  // Browsers only allow sound after a user gesture: start audio on the first click / key / touch.
+  useEffect(() => {
+    const unlock = () => initAudio()
+    window.addEventListener('pointerdown', unlock)
+    window.addEventListener('keydown', unlock)
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
+  }, [])
   const [dismissed, setDismissed] = useState(null)
   const [open, setOpen] = useState(null)
 
@@ -45,7 +58,22 @@ export default function App() {
       </Suspense>
 
       <header className="hud-top">
-        <button className="logo" onClick={() => { commands.resetCount++ }} title="Back to start">alkhimch</button>
+        <div className="hud-left">
+          <button className="logo" onClick={() => { commands.resetCount++ }} title="Back to start">alkhimch</button>
+          <button
+            className="mute"
+            onClick={toggleMuted}
+            aria-pressed={muted}
+            aria-label={muted ? 'Unmute sound' : 'Mute sound'}
+            title={muted ? 'Unmute (M)' : 'Mute (M)'}
+          >
+            {muted ? (
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l5 6M22 9l-5 6" fill="none" /></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" fill="none" /></svg>
+            )}
+          </button>
+        </div>
         <nav aria-label="Jump to">
           {MENU.map((m) => (
             <button key={m.id} className={zone === m.id ? 'active' : ''} onClick={() => teleport(m.id)}>{m.label}</button>
@@ -58,7 +86,7 @@ export default function App() {
 
       {started && !isTouch && (
         <div className="hint" aria-hidden="true">
-          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · drag to look · scroll to zoom
+          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · drag to look
         </div>
       )}
       {started && isTouch && <TouchControls />}

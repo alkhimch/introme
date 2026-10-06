@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { commands, input } from '../world/store'
+import { toggleMuted } from '../audio/sound'
 
 const MAP = {
   ArrowUp: 'forward', KeyW: 'forward',
@@ -16,6 +17,7 @@ export default function useKeyboard(onKey) {
       const k = MAP[e.code]
       if (k) { input[k] = true; e.preventDefault(); onKey?.('drive') }
       if (e.code === 'KeyR') commands.resetCount++
+      if (e.code === 'KeyM' && !e.repeat) toggleMuted()
     }
     const up = (e) => { const k = MAP[e.code]; if (k) input[k] = false }
     const blur = () => Object.keys(input).forEach((k) => (input[k] = false))

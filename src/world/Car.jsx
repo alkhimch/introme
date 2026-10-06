@@ -4,6 +4,7 @@ import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import { CAMERA_OFFSET, COLLIDERS, SPAWN, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
 import { camView, car, commands, initCamView, input } from './store'
+import { updateVehicleAudio } from '../audio/sound'
 
 const MAX_SPEED = 20, MAX_REVERSE = -8, ACCEL = 16, BRAKE = 34, TURN = 2.1
 const CAR_RADIUS = 1.5
@@ -223,6 +224,13 @@ export default function Car({ mobile }) {
     if (r > WORLD_RADIUS) { nx *= WORLD_RADIUS / r; nz *= WORLD_RADIUS / r; car.speed *= 0.6 }
     car.x = nx; car.z = nz
     car.y = height(nx, nz)
+
+    updateVehicleAudio({
+      speed: car.speed,
+      throttle,
+      steer: steerRef.current,
+      braking: input.brake || (throttle < 0 && car.speed > 1) || (throttle > 0 && car.speed < -1),
+    })
 
     // ── Orientation: follow the ground normal ──
     normal(car.x, car.z, tmp.n)

@@ -3,7 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { CONTACT_SIGNS, FRAMES, GERS, OVOO, SIGNPOST, STELES, ZONES, height, rng } from './layout'
-import { car } from './store'
+import { camView, car } from './store'
+import { bleat } from '../audio/sound'
 import { FONT_URL } from './NameLetters'
 import { developer, profile } from '../content'
 
@@ -254,7 +255,7 @@ function Sheep() {
     const r = rng(99)
     return Array.from({ length: 16 }, () => {
       const x = -52 + (r() - 0.5) * 18, z = -6 + (r() - 0.5) * 18
-      return { x, z, hx: x, hz: z, heading: r() * 6.28, speed: 0, t: r() * 10, black: r() > 0.85 }
+      return { x, z, hx: x, hz: z, heading: r() * 6.28, speed: 0, t: r() * 10, black: r() > 0.85, bleatIn: r() * 3 }
     })
   }, [])
   const refs = useRef([])
@@ -262,6 +263,13 @@ function Sheep() {
     const dt = Math.min(delta, 1 / 30)
     flock.forEach((s, i) => {
       const dx = s.x - car.x, dz = s.z - car.z, d = Math.hypot(dx, dz)
+      // Bleat when the van comes close (louder and more often the closer it is).
+      s.bleatIn -= dt
+      if (d < 16 && s.bleatIn <= 0) {
+        s.bleatIn = (d < 9 ? 1.5 : 4) + Math.random() * 4
+        const pan = (dx * Math.cos(camView.yaw) - dz * Math.sin(camView.yaw)) / 10
+        bleat(Math.max(0.15, 1 - d / 16), pan)
+      }
       if (d < 9) { s.heading = Math.atan2(dx, dz) + Math.sin(i) * 0.4; s.speed = 6 }
       else {
         s.t -= dt

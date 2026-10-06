@@ -1,16 +1,23 @@
 # introme
 
-Personal portfolio of Shinenbayar Alkhimch — a scroll-driven Three.js site built with React Three Fiber.
+Personal portfolio of Shinenbayar Alkhimch — a drivable 3D world built with Three.js and React Three Fiber.
 
-- **Hero** — particles spell "I am Shinenbayar / Developer / Mathematician / Photographer"
-- **Developer** — experience and skills over a rotating lattice
-- **Mathematician** — a live, flowing Lorenz attractor
-- **Photographer** — prints that develop on a darkroom line under a red safelight
-- **Contact** — links to LinkedIn and GitHub
+Hop in a UAZ-452 "Purgon" and drive across a low-poly Mongolian steppe:
+
+- **Start** — the name in big 3D letters (knock them over), gers and a signpost
+- **Developer** — Orkhon-style stone steles carrying the work history
+- **Mathematician** — a floating Lorenz attractor over a golden-angle spiral of stones
+- **Photographer** — framed prints standing in the grass (click to open)
+- **Contact** — an ovoo with khadag, and LinkedIn / GitHub signs
+
+Driving into a zone opens its info panel. The top menu teleports straight to any zone.
+Controls: WASD / arrow keys, Space to brake, R to reset; on-screen pedals on touch devices.
 
 ## Edit your content
 
 Everything personal lives in [`src/content.js`](src/content.js). Real photos go in `public/photos/` and are listed in the `photos` array there.
+
+The 3D letters use `public/fonts/josefin-bold.typeface.json`, generated from Josefin Sans by `node scripts/make-typeface.mjs`.
 
 ## Develop
 

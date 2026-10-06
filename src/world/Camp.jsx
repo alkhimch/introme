@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { CAMP, CHILD, DOG_HOME, SWING, WOMAN, campLocal, height } from './layout'
+import { CAMP, CHILD, DOG_HOME, DOGHOUSE, SWING, WOMAN, campLocal, height } from './layout'
 import { car } from './store'
 
 const Std = (props) => <meshStandardMaterial flatShading roughness={0.9} {...props} />
@@ -113,6 +113,10 @@ function Cabin() {
         <Window key={`l${wy}`} position={[-W / 2 - 0.03, wy, 0]} ry={-Math.PI / 2} />,
       ])}
       <Window position={[0, base + H + 0.75, D / 2 - 0.9]} />
+      {/* Back wall windows */}
+      {[base + 1.5, upper + 1.2].flatMap((wy) => [-2.0, 2.0].map((wx) => (
+        <Window key={`b${wy}${wx}`} position={[wx, wy, -D / 2 - 0.03]} ry={Math.PI} />
+      )))}
       {/* A little bench by the door */}
       <mesh position={[-2.6, 0.8, D / 2 + 0.6]} castShadow><boxGeometry args={[1.4, 0.1, 0.45]} /><Std color="#7a4f2c" /></mesh>
       {[-3.2, -2.0].map((x) => (
@@ -292,6 +296,133 @@ function Dog() {
   )
 }
 
+// The dog's own little kennel, with a food bowl and a bone.
+function Doghouse() {
+  const y = height(DOGHOUSE.x, DOGHOUSE.z)
+  const W = 1.25, D = 1.45, H = 0.95, roofH = 0.55
+  const ang = Math.atan2(roofH, W / 2 + 0.12), slope = Math.hypot(W / 2 + 0.12, roofH)
+  const gable = useMemo(() => {
+    const sh = new THREE.Shape()
+    sh.moveTo(-W / 2, 0); sh.lineTo(W / 2, 0); sh.lineTo(0, roofH); sh.closePath()
+    return new THREE.ShapeGeometry(sh)
+  }, [])
+  return (
+    <group position={[DOGHOUSE.x, y, DOGHOUSE.z]} rotation={[0, DOGHOUSE.ry, 0]}>
+      <mesh position={[0, 0.06, 0]} receiveShadow><boxGeometry args={[W + 0.15, 0.12, D + 0.15]} /><Std color="#7a4f2c" /></mesh>
+      <mesh position={[0, 0.12 + H / 2, 0]} castShadow receiveShadow><boxGeometry args={[W, H, D]} /><Std color="#c48a4f" /></mesh>
+      {/* Plank lines */}
+      {[0.32, 0.6, 0.88].map((h) => (
+        <mesh key={h} position={[0, 0.12 + h, 0]}><boxGeometry args={[W + 0.01, 0.025, D + 0.01]} /><Std color="#9b6a3e" /></mesh>
+      ))}
+      {[-1, 1].map((sd) => (
+        <mesh key={sd} geometry={gable} position={[0, 0.12 + H, sd * (D / 2 + 0.001)]} rotation={[0, sd > 0 ? 0 : Math.PI, 0]}>
+          <Std color="#c48a4f" side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      {[-1, 1].map((sd) => (
+        <mesh key={sd} position={[sd * (W / 4 + 0.06), 0.12 + H + roofH / 2, 0]} rotation={[0, 0, -sd * ang]} castShadow>
+          <boxGeometry args={[slope, 0.08, D + 0.35]} />
+          <Std color="#b5432f" />
+        </mesh>
+      ))}
+      {/* Arched doorway */}
+      <mesh position={[0, 0.12 + 0.3, D / 2 + 0.005]}><boxGeometry args={[0.5, 0.6, 0.02]} /><meshBasicMaterial color="#1e1612" /></mesh>
+      <mesh position={[0, 0.12 + 0.6, D / 2 + 0.005]}><circleGeometry args={[0.25, 14, 0, Math.PI]} /><meshBasicMaterial color="#1e1612" /></mesh>
+      {/* Bowl + bone */}
+      <mesh position={[0.45, 0.07, D / 2 + 0.55]}><cylinderGeometry args={[0.17, 0.13, 0.1, 12]} /><Std color="#3d6fa8" /></mesh>
+      <mesh position={[0.45, 0.115, D / 2 + 0.55]}><cylinderGeometry args={[0.13, 0.13, 0.01, 12]} /><Std color="#8a5a3c" /></mesh>
+      <group position={[-0.35, 0.05, D / 2 + 0.6]} rotation={[0, 0.6, 0]}>
+        <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[0.03, 0.03, 0.3, 6]} /><Std color="#f4efe4" /></mesh>
+        {[-0.16, 0.16].flatMap((x) => [-0.035, 0.035].map((z) => (
+          <mesh key={`${x}${z}`} position={[x, 0, z]}><sphereGeometry args={[0.045, 6, 4]} /><Std color="#f4efe4" /></mesh>
+        )))}
+      </group>
+    </group>
+  )
+}
+
+// A dark tabby cat with a white chest patrolling round the back of the cabin, sitting down at each corner for a wash.
+const CAT_ROUTE = [[4.4, 1.6], [4.4, -3.3], [-4.4, -3.3], [-4.4, 1.6]].map(([x, z]) => campLocal(x, z))
+
+function Cat() {
+  const root = useRef()
+  const body = useRef()
+  const tail = useRef()
+  const head = useRef()
+  const legs = useRef([])
+  const s = useRef({ seg: 0, u: 0, dir: 1, sit: 2, phase: 0, heading: 0 })
+  useFrame((st, delta) => {
+    const dt = Math.min(delta, 1 / 30)
+    const c = s.current
+    const t = st.clock.elapsedTime
+    let speed = 0
+    if (c.sit > 0) {
+      c.sit -= dt
+    } else {
+      const a = CAT_ROUTE[c.seg], b = CAT_ROUTE[c.seg + 1]
+      const len = Math.hypot(b.x - a.x, b.z - a.z)
+      speed = 1.1
+      c.u += (speed * dt * c.dir) / len
+      if (c.u >= 1 || c.u <= 0) {
+        c.u = Math.min(1, Math.max(0, c.u))
+        const atEnd = (c.dir > 0 && c.seg === CAT_ROUTE.length - 2 && c.u === 1) || (c.dir < 0 && c.seg === 0 && c.u === 0)
+        if (atEnd) { c.dir = -c.dir; c.sit = 3 + Math.random() * 4 }
+        else if (c.dir > 0) { c.seg++; c.u = 0 }
+        else { c.seg--; c.u = 1 }
+      }
+    }
+    const a = CAT_ROUTE[c.seg], b = CAT_ROUTE[c.seg + 1]
+    const x = a.x + (b.x - a.x) * c.u, z = a.z + (b.z - a.z) * c.u
+    if (speed > 0) {
+      const want = Math.atan2((b.x - a.x) * c.dir, (b.z - a.z) * c.dir)
+      const diff = ((want - c.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI
+      c.heading += diff * Math.min(1, dt * 6)
+    }
+    c.phase += speed * dt * 9
+    root.current.position.set(x, height(x, z), z)
+    root.current.rotation.y = c.heading
+    const sitting = c.sit > 0 ? 1 : 0
+    body.current.rotation.x += (-0.55 * sitting - body.current.rotation.x) * Math.min(1, dt * 6)
+    head.current.rotation.x = sitting ? Math.sin(t * 2) * 0.08 + 0.45 : 0
+    head.current.rotation.y = sitting ? Math.sin(t * 0.7) * 0.4 : 0
+    tail.current.rotation.z = Math.sin(t * (sitting ? 1.5 : 3)) * 0.35
+    legs.current.forEach((l, i) => { if (l) l.rotation.x = speed ? Math.sin(c.phase + (i === 0 || i === 3 ? 0 : Math.PI)) * 0.6 : 0 })
+  })
+  const fur = '#47423e', stripe = '#2c2926', belly = '#f1ece0'
+  return (
+    <group ref={root}>
+      <group ref={body} position={[0, 0.22, -0.12]}>
+        <group position={[0, 0, 0.12]}>
+          <mesh position={[0, 0.07, 0]} castShadow><boxGeometry args={[0.2, 0.18, 0.46]} /><Std color={fur} /></mesh>
+          {[-0.1, 0.02, 0.14].map((zz) => (
+            <mesh key={zz} position={[0, 0.165, zz]}><boxGeometry args={[0.205, 0.02, 0.05]} /><Std color={stripe} /></mesh>
+          ))}
+          <mesh position={[0, 0.0, 0.12]}><boxGeometry args={[0.14, 0.08, 0.16]} /><Std color={belly} /></mesh>
+          <group ref={head} position={[0, 0.2, 0.26]}>
+            <mesh castShadow><boxGeometry args={[0.2, 0.18, 0.18]} /><Std color={fur} /></mesh>
+            <mesh position={[0, -0.04, 0.09]}><boxGeometry args={[0.1, 0.07, 0.04]} /><Std color={belly} /></mesh>
+            {[-0.06, 0.06].map((xx) => (
+              <mesh key={xx} position={[xx, 0.12, -0.01]}><coneGeometry args={[0.045, 0.1, 4]} /><Std color={fur} /></mesh>
+            ))}
+            {[-0.05, 0.05].map((xx) => (
+              <mesh key={xx} position={[xx, 0.02, 0.092]}><boxGeometry args={[0.03, 0.035, 0.005]} /><meshBasicMaterial color="#7bc043" /></mesh>
+            ))}
+          </group>
+          <group ref={tail} position={[0, 0.12, -0.23]}>
+            <mesh position={[0, 0.16, -0.06]} rotation={[-0.35, 0, 0]}><cylinderGeometry args={[0.025, 0.03, 0.36, 5]} /><Std color={fur} /></mesh>
+            <mesh position={[0, 0.34, -0.1]}><sphereGeometry args={[0.032, 5, 4]} /><Std color={stripe} /></mesh>
+          </group>
+        </group>
+      </group>
+      {[[-0.06, 0.12], [0.06, 0.12], [-0.06, -0.14], [0.06, -0.14]].map(([xx, zz], i) => (
+        <group key={i} ref={(el) => (legs.current[i] = el)} position={[xx, 0.17, zz]}>
+          <mesh position={[0, -0.085, 0]}><boxGeometry args={[0.05, 0.17, 0.05]} /><Std color={i < 2 ? belly : fur} /></mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
 export default function Camp() {
   return (
     <group>
@@ -300,6 +431,8 @@ export default function Camp() {
       <Person spot={WOMAN} deelColor="#2f5fa8" sashColor="#e3a82b" braid />
       <Person spot={CHILD} scale={0.58} deelColor="#c8423b" sashColor="#f2c94c" hat hop waveSpeed={10} />
       <Dog />
+      <Doghouse />
+      <Cat />
     </group>
   )
 }

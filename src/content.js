@@ -1,15 +1,13 @@
 // ─────────────────────────────────────────────────────────────
 // All personal content lives here. Edit this file to update the site.
-// Items marked DUMMY CONTENT are placeholders — replace them from your LinkedIn CV.
 // ─────────────────────────────────────────────────────────────
 
 export const profile = {
   firstName: 'Shinenbayar',
   lastName: 'Alkhimch',
-  // Words the hero particles morph through, after "I am".
-  heroWords: ['Shinenbayar', 'Developer', 'Mathematician', 'Photographer'],
-  tagline: 'Brother of two. Builder of things. Finder of patterns.',
-  location: 'Ulaanbaatar, Mongolia', // DUMMY CONTENT: confirm
+  roles: ['Software Developer', 'Photographer'],
+  location: 'Ulaanbaatar, Mongolia',
+  email: 'gansukhshinenbayr@gmail.com',
   links: {
     linkedin: 'https://www.linkedin.com/in/shinenbayar',
     github: 'https://github.com/alkhimch',
@@ -17,41 +15,27 @@ export const profile = {
 }
 
 export const developer = {
-  // DUMMY CONTENT — replace with your LinkedIn "About" section.
   about:
-    'I build software end to end — from data models and APIs to interfaces people enjoy using. ' +
-    'I like problems where engineering meets mathematics, and I care about shipping things that are fast, clear and reliable.',
-  // DUMMY CONTENT — replace with your LinkedIn "Experience" entries (newest first).
+    'Software developer with over 5 years of experience. I build front-ends with Nuxt, Vue and React ' +
+    'and back-ends with Spring Boot and Node.js, mostly for fintech products. ' +
+    'These days I’m focused on test-driven development.',
   experience: [
-    {
-      role: 'Senior Software Engineer',
-      company: 'Northwind Labs',
-      period: '2023 — Present',
-      summary: 'Lead development of data-heavy web products; designed the API layer and a shared UI component library.',
-    },
-    {
-      role: 'Full-Stack Developer',
-      company: 'Blue Steppe Digital',
-      period: '2020 — 2023',
-      summary: 'Built and maintained Vue/Nuxt and Node.js applications for fintech and e-commerce clients.',
-    },
-    {
-      role: 'Junior Developer',
-      company: 'Pixel Yurt Studio',
-      period: '2018 — 2020',
-      summary: 'Shipped marketing sites and internal tools; introduced automated testing and CI.',
-    },
+    { role: 'Senior Software Developer', company: 'AiLab LLC', period: 'Mar 2023 — Present' },
+    { role: 'Software Engineer', company: 'AiLab LLC', period: 'Jun 2021 — Mar 2023' },
+    { role: 'Frontend Developer', company: 'Corex', period: 'Feb 2022 — Apr 2022' },
   ],
-  // DUMMY CONTENT — replace with your LinkedIn "Skills".
-  skills: ['JavaScript', 'TypeScript', 'React', 'Vue / Nuxt', 'Three.js', 'Node.js', 'Python', 'PostgreSQL', 'Docker'],
+  skills: ['Nuxt.js', 'Vue.js', 'React', 'Spring Boot', 'Node.js', 'Test-Driven Development', 'Front-end', 'Team Leadership'],
+  education: [
+    { title: 'National University of Mongolia', detail: 'B.Sc. Computer Science', period: '2017 — 2021' },
+  ],
+  honors: ['National Mathematics Olympiad'],
 }
 
-export const math = {
-  heading: 'Mathematics',
-  text:
-    'Mathematics taught me to look for the simple rule underneath complicated behaviour. ' +
-    'The shape you see is the Lorenz attractor: three short equations that never repeat themselves.',
-}
+export const hobbies = [
+  { name: 'Basketball', text: 'Fast breaks and team play.' },
+  { name: 'Football', text: 'The beautiful game — try scoring a goal with the van.' },
+  { name: 'Counter-Strike 2', text: 'Teamwork, aim and split-second decisions.' },
+]
 
 // Put your photos in /public/photos and list them here, e.g.
 //   { src: 'photos/steppe.jpg', title: 'Steppe, 2023' }

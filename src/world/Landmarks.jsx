@@ -1,8 +1,8 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import * as THREE from 'three'
-import { CONTACT_SIGNS, FRAMES, GERS, OVOO, PLINTH, SIGNPOST, STELES, ZONES, height, rng } from './layout'
+import { CONTACT_SIGNS, FRAMES, GERS, OVOO, SIGNPOST, STELES, ZONES, height, rng } from './layout'
 import { car } from './store'
 import { FONT_URL } from './NameLetters'
 import { developer, profile } from '../content'
@@ -81,70 +81,6 @@ function Stele({ x, z, ry, index }) {
           </Text>
         </group>
       )}
-    </group>
-  )
-}
-
-// ── Mathematician: floating Lorenz attractor + phyllotaxis spiral of stones ──
-function lorenzPoints(count) {
-  const out = new Float32Array(count * 3)
-  let x = 0.1, y = 0, z = 0
-  const s = 10, r = 28, b = 8 / 3, dt = 0.005
-  for (let i = 0; i < 1500; i++) { const dx = s * (y - x), dy = x * (r - z) - y, dz = x * y - b * z; x += dx * dt; y += dy * dt; z += dz * dt }
-  for (let i = 0; i < count; i++) {
-    for (let k = 0; k < 2; k++) { const dx = s * (y - x), dy = x * (r - z) - y, dz = x * y - b * z; x += dx * dt; y += dy * dt; z += dz * dt }
-    out.set([x * 0.09, (z - 25) * 0.09, y * 0.09], i * 3)
-  }
-  return out
-}
-
-function MathMonument() {
-  const { x, z } = PLINTH
-  const y = height(x, z)
-  const attractor = useRef()
-  const positions = useMemo(() => lorenzPoints(6000), [])
-  const spiral = useMemo(() => {
-    const out = []
-    const golden = Math.PI * (3 - Math.sqrt(5))
-    for (let i = 24; i < 300; i++) {
-      const rr = 0.56 * Math.sqrt(i), a = i * golden
-      out.push([Math.cos(a) * rr, Math.sin(a) * rr, 0.16 + (i % 5) * 0.025])
-    }
-    return out
-  }, [])
-  const spiralRef = useRef()
-  useLayoutEffect(() => {
-    const m = new THREE.Matrix4()
-    spiral.forEach(([sx, sz, s], i) => {
-      m.makeScale(s * 0.9, s * 0.45, s * 0.9).setPosition(x + sx, height(x + sx, z + sz) + 0.02, z + sz)
-      spiralRef.current.setMatrixAt(i, m)
-    })
-    spiralRef.current.instanceMatrix.needsUpdate = true
-  }, [spiral, x, z])
-  useFrame((state, dt) => {
-    attractor.current.rotation.y += dt * 0.25
-    attractor.current.position.y = y + 5.2 + Math.sin(state.clock.elapsedTime * 0.8) * 0.25
-  })
-  return (
-    <group>
-      <mesh position={[x, y + 0.6, z]} castShadow receiveShadow>
-        <cylinderGeometry args={[1.5, 1.8, 1.2, 10]} />
-        <Std color={STONE} />
-      </mesh>
-      <mesh position={[x, y + 1.35, z]} castShadow>
-        <cylinderGeometry args={[0.9, 1.1, 0.3, 10]} />
-        <Std color="#a29d92" />
-      </mesh>
-      <points ref={attractor} position={[x, y + 5.2, z]} scale={1.05}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        </bufferGeometry>
-        <pointsMaterial color="#ff9d2e" size={0.09} sizeAttenuation transparent opacity={0.95} />
-      </points>
-      <instancedMesh ref={spiralRef} args={[null, null, spiral.length]} receiveShadow castShadow>
-        <icosahedronGeometry args={[1, 0]} />
-        <Std color="#efe9da" />
-      </instancedMesh>
     </group>
   )
 }
@@ -285,7 +221,7 @@ function Signboard({ x, z, ry, text, href }) {
 function Signpost() {
   const { x, z } = SIGNPOST
   const y = height(x, z)
-  const names = { work: 'Developer', math: 'Mathematics', photos: 'Photography', contact: 'Contact' }
+  const names = { work: 'Developer', hobbies: 'Hobbies', photos: 'Photography', contact: 'Contact' }
   return (
     <group position={[x, y, z]}>
       <mesh position={[0, 1.7, 0]} castShadow>
@@ -371,7 +307,6 @@ export default function Landmarks({ photos, onOpenPhoto }) {
     <>
       {GERS.map((g, i) => <Ger key={i} {...g} />)}
       {STELES.map((s) => <Stele key={s.index} {...s} />)}
-      <MathMonument />
       {FRAMES.map((f) => <PhotoFrame key={f.index} {...f} photo={photos[f.index]} onOpen={onOpenPhoto} />)}
       <Ovoo />
       {CONTACT_SIGNS.map((s) => <Signboard key={s.key} {...s} href={profile.links[s.key]} />)}

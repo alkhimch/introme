@@ -3,7 +3,7 @@
 
 export const ZONES = [
   { id: 'work', label: 'DEVELOPER', x: -38, z: -36, r: 13 },
-  { id: 'math', label: 'MATHEMATICIAN', x: 38, z: -40, r: 13 },
+  { id: 'hobbies', label: 'HOBBIES', x: 38, z: -40, r: 15 },
   { id: 'photos', label: 'PHOTOGRAPHER', x: 0, z: -80, r: 15 },
   { id: 'contact', label: 'CONTACT', x: 44, z: 24, r: 12 },
 ]
@@ -91,10 +91,22 @@ export function rng(seed = 1) {
 }
 
 // ── Landmark placement (shared by rendering and collisions) ──
-const wz = ZONES[0], mz = ZONES[1], pz = ZONES[2], cz = ZONES[3]
+const wz = ZONES[0], hz = ZONES[1], pz = ZONES[2], cz = ZONES[3]
 
 export const STELES = [-5, 0, 5].map((dx, i) => ({ x: wz.x + dx, z: wz.z - 3 + Math.abs(dx) * 0.35, ry: -dx * 0.07, index: i }))
-export const PLINTH = { x: mz.x, z: mz.z }
+// Hobbies: football goal at the north edge, basketball hoop west, CS2 crates east.
+export const GOAL = { x: hz.x, z: hz.z - 10, width: 5.4, depth: 1.8, height: 2.3 }
+export const HOOP = { x: hz.x - 9.5, z: hz.z - 3 }
+export const CRATES = [
+  { x: hz.x + 8.5, z: hz.z - 4.5, y: 0, s: 1.7, ry: 0.1 },
+  { x: hz.x + 10.3, z: hz.z - 4.2, y: 0, s: 1.7, ry: -0.05 },
+  { x: hz.x + 9.4, z: hz.z - 4.4, y: 1.7, s: 1.7, ry: 0.2 },
+  { x: hz.x + 9.2, z: hz.z - 1.9, y: 0, s: 1.3, ry: 0.4 },
+]
+export const BALL_SPAWNS = {
+  football: { x: hz.x, z: hz.z + 1 },
+  basketball: { x: hz.x - 7, z: hz.z + 2 },
+}
 export const FRAMES = Array.from({ length: 6 }, (_, i) => {
   const a = (-155 + i * 26) * (Math.PI / 180)
   const x = pz.x + Math.cos(a) * 10, z = pz.z + Math.sin(a) * 10
@@ -110,7 +122,11 @@ export const SIGNPOST = { x: 8, z: 9 }
 export const COLLIDERS = [
   ...GERS.map((g) => ({ x: g.x, z: g.z, r: g.r + 0.3 })),
   ...STELES.map((s) => ({ x: s.x, z: s.z, r: 1.1 })),
-  { x: PLINTH.x, z: PLINTH.z, r: 1.9 },
+  { x: GOAL.x - GOAL.width / 2, z: GOAL.z, r: 0.3 },
+  { x: GOAL.x + GOAL.width / 2, z: GOAL.z, r: 0.3 },
+  ...[-2, -1, 0, 1, 2].map((k) => ({ x: GOAL.x + k * 1.2, z: GOAL.z - GOAL.depth, r: 0.5 })),
+  { x: HOOP.x, z: HOOP.z, r: 0.45 },
+  ...CRATES.filter((c) => c.y === 0).map((c) => ({ x: c.x, z: c.z, r: c.s * 0.68 })),
   ...FRAMES.map((f) => ({ x: f.x, z: f.z, r: 0.9 })),
   { x: OVOO.x, z: OVOO.z, r: 4.4 },
   ...CONTACT_SIGNS.map((s) => ({ x: s.x, z: s.z, r: 0.45 })),

@@ -5,7 +5,7 @@ import Lightbox from './components/Lightbox'
 import Panel from './components/Panel'
 import TouchControls from './components/TouchControls'
 import useKeyboard from './components/useKeyboard'
-import { commands, setStarted, useStarted, useZone } from './world/store'
+import { commands, setStarted, useStarted, useToast, useZone } from './world/store'
 
 const World = lazy(() => import('./world/World'))
 
@@ -14,7 +14,7 @@ const isMobile = typeof window !== 'undefined' && window.innerWidth < 760
 
 const MENU = [
   { id: 'work', label: 'Developer' },
-  { id: 'math', label: 'Math' },
+  { id: 'hobbies', label: 'Hobbies' },
   { id: 'photos', label: 'Photos' },
   { id: 'contact', label: 'Contact' },
 ]
@@ -23,6 +23,7 @@ export default function App() {
   const sources = usePhotoSources(photos)
   const started = useStarted()
   const zone = useZone()
+  const toast = useToast()
   const [dismissed, setDismissed] = useState(null)
   const [open, setOpen] = useState(null)
 
@@ -65,12 +66,14 @@ export default function App() {
         <div className="intro-card">
           <p className="intro-iam">I am</p>
           <h1>{profile.firstName} <span>{profile.lastName}</span></h1>
-          <p className="intro-roles">Developer · Mathematician · Photographer</p>
+          <p className="intro-roles">{profile.roles.join(' · ')}</p>
           <p className="intro-text">Hop in the Purgon and drive across the Mongolian steppe to explore my work.</p>
           <button className="btn primary" onClick={start}>Start driving</button>
           <p className="intro-small">{isTouch ? 'Use the on-screen pedals to drive.' : 'WASD or arrow keys · or use the menu above.'}</p>
         </div>
       </div>
+
+      {toast && <div className="toast" role="status">{toast}</div>}
 
       <Lightbox photos={sources} index={open} onClose={closeLightbox} onNav={nav} />
     </>

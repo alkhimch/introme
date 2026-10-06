@@ -20,3 +20,13 @@ export function getZone() { return ui.zone }
 
 export function setStarted() { if (!ui.started) { ui.started = true; emit() } }
 export const useStarted = () => useSyncExternalStore(subscribe, () => ui.started)
+
+// Short-lived banner messages (e.g. "GOAL!").
+let toast = null
+let toastTimer = 0
+export function showToast(text, ms = 2200) {
+  toast = text; emit()
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toast = null; emit() }, ms)
+}
+export const useToast = () => useSyncExternalStore(subscribe, () => toast)

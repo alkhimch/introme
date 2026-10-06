@@ -6,7 +6,7 @@ Hop in a UAZ-452 "Purgon" and drive across a low-poly Mongolian steppe:
 
 - **Start** — the name in big 3D letters (knock them over), gers and a signpost
 - **Developer** — Orkhon-style stone steles carrying the work history
-- **Mathematician** — a floating Lorenz attractor over a golden-angle spiral of stones
+- **Hobbies** — a football goal (drive the ball in), a basketball hoop and CS2-style crates
 - **Photographer** — framed prints standing in the grass (click to open)
 - **Contact** — an ovoo with khadag, and LinkedIn / GitHub signs
 

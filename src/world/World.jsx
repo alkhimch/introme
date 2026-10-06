@@ -8,6 +8,7 @@ import Car from './Car'
 import NameLetters from './NameLetters'
 import Landmarks from './Landmarks'
 import Zones from './Zones'
+import Hobbies from './Hobbies'
 
 export default function World({ photos, onOpenPhoto, mobile }) {
   return (
@@ -30,6 +31,7 @@ export default function World({ photos, onOpenPhoto, mobile }) {
       <Suspense fallback={null}>
         <NameLetters />
         <Landmarks photos={photos} onOpenPhoto={onOpenPhoto} />
+        <Hobbies />
       </Suspense>
     </Canvas>
   )

@@ -122,7 +122,7 @@ export default function NameLetters() {
         anchorX="center"
         anchorY="middle"
       >
-        DEVELOPER · MATHEMATICIAN · PHOTOGRAPHER
+        {profile.roles.join(' · ').toUpperCase()}
       </Text>
     </group>
   )

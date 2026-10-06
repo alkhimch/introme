@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 // All personal content lives here. Edit this file to update the site.
-// Items marked TODO are placeholders — fill them in from LinkedIn.
+// Items marked DUMMY CONTENT are placeholders — replace them from your LinkedIn CV.
 // ─────────────────────────────────────────────────────────────
 
 export const profile = {
@@ -9,7 +9,7 @@ export const profile = {
   // Words the hero particles morph through, after "I am".
   heroWords: ['Shinenbayar', 'Developer', 'Mathematician', 'Photographer'],
   tagline: 'Brother of two. Builder of things. Finder of patterns.',
-  location: 'Ulaanbaatar, Mongolia', // TODO: confirm
+  location: 'Ulaanbaatar, Mongolia', // DUMMY CONTENT: confirm
   links: {
     linkedin: 'https://www.linkedin.com/in/shinenbayar',
     github: 'https://github.com/alkhimch',
@@ -17,17 +17,33 @@ export const profile = {
 }
 
 export const developer = {
-  // TODO: replace with your LinkedIn "About" section.
+  // DUMMY CONTENT — replace with your LinkedIn "About" section.
   about:
     'I build software end to end — from data models and APIs to interfaces people enjoy using. ' +
-    'I like problems where engineering meets mathematics.',
-  // TODO: replace with your LinkedIn "Experience" entries (newest first).
+    'I like problems where engineering meets mathematics, and I care about shipping things that are fast, clear and reliable.',
+  // DUMMY CONTENT — replace with your LinkedIn "Experience" entries (newest first).
   experience: [
-    { role: 'Software Developer', company: 'TODO: Company', period: 'TODO: 20XX — Present', summary: 'TODO: one line about what you built or owned.' },
-    { role: 'TODO: Previous role', company: 'TODO: Company', period: 'TODO: 20XX — 20XX', summary: 'TODO: one line about impact.' },
+    {
+      role: 'Senior Software Engineer',
+      company: 'Northwind Labs',
+      period: '2023 — Present',
+      summary: 'Lead development of data-heavy web products; designed the API layer and a shared UI component library.',
+    },
+    {
+      role: 'Full-Stack Developer',
+      company: 'Blue Steppe Digital',
+      period: '2020 — 2023',
+      summary: 'Built and maintained Vue/Nuxt and Node.js applications for fintech and e-commerce clients.',
+    },
+    {
+      role: 'Junior Developer',
+      company: 'Pixel Yurt Studio',
+      period: '2018 — 2020',
+      summary: 'Shipped marketing sites and internal tools; introduced automated testing and CI.',
+    },
   ],
-  // TODO: replace with your LinkedIn "Skills".
-  skills: ['JavaScript', 'TypeScript', 'Vue / Nuxt', 'React', 'Three.js', 'Node.js', 'Python', 'SQL'],
+  // DUMMY CONTENT — replace with your LinkedIn "Skills".
+  skills: ['JavaScript', 'TypeScript', 'React', 'Vue / Nuxt', 'Three.js', 'Node.js', 'Python', 'PostgreSQL', 'Docker'],
 }
 
 export const math = {

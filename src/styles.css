@@ -59,6 +59,7 @@ p { margin: 0 0 1em; color: #d8d4cb; }
   padding: 20px clamp(16px, 4vw, 48px);
   font-family: var(--display);
   z-index: 10;
+  background: linear-gradient(rgba(5, 5, 7, 0.92), rgba(5, 5, 7, 0.6) 60%, transparent);
 }
 .logo { font-size: 1.25rem; font-weight: 700; text-decoration: none; letter-spacing: 0.02em; }
 .nav nav { display: flex; gap: clamp(14px, 2.5vw, 32px); align-items: center; }

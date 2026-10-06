@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { GERS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
+import { CAMP, GERS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
 import { camView, car, commands, setStarted } from '../world/store'
 
 const RANGE = 48 // world units from the van to the radar rim
@@ -68,6 +68,9 @@ export default function Radar({ mobile }) {
       ctx.fillStyle = 'rgba(245, 240, 228, 0.85)'
       for (const g of GERS) { const [sx, sy] = toScreen(g.x, g.z); ctx.beginPath(); ctx.arc(sx, sy, Math.max(2, g.r * scale), 0, Math.PI * 2); ctx.fill() }
       { const [sx, sy] = toScreen(NAME_POS.x, NAME_POS.z); ctx.fillRect(sx - 8 * scale * 1.2, sy - 1.5, 16 * scale * 1.2, 3) }
+      // Camp cabin (red roof)
+      { const [sx, sy] = toScreen(CAMP.x, CAMP.z); const h = Math.max(3, 3.5 * scale)
+        ctx.fillStyle = '#c4553e'; ctx.fillRect(sx - h, sy - h, h * 2, h * 2) }
 
       // Radar sweep
       const a = (time / 1000) * 1.6

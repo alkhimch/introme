@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { ZONES, height, pathDistance, rng, WORLD_RADIUS } from './layout'
+import { CAMP, ZONES, height, pathDistance, rng, WORLD_RADIUS } from './layout'
 
 function scatter(count, seed, accept) {
   const r = rng(seed), out = []
@@ -11,6 +11,7 @@ function scatter(count, seed, accept) {
     if (pathDistance(x, z) < 2.6) continue
     if (ZONES.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.r - 3)) continue
     if (Math.hypot(x, z + 2) < 11) continue // keep the name area clean
+    if (Math.hypot(x - CAMP.x, z - CAMP.z) < 10) continue // and the camp yard
     if (accept && !accept(x, z, r)) continue
     out.push({ x, z, y: height(x, z), r: r(), r2: r(), r3: r() })
   }

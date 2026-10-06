@@ -17,6 +17,16 @@ export const GERS = [
 ]
 export const WORLD_RADIUS = 92
 
+// Summer-camp cabin near the gers, facing the start area.
+export const CAMP = { x: -36, z: 34, ry: 2.06 }
+// Convert a point in the cabin's local frame (front = +z) to world space.
+export function campLocal(lx, lz) {
+  const c = Math.cos(CAMP.ry), s = Math.sin(CAMP.ry)
+  return { x: CAMP.x + lx * c + lz * s, z: CAMP.z - lx * s + lz * c }
+}
+export const SWING = { ...campLocal(-5, 6.5), ry: CAMP.ry }
+export const WOMAN = { ...campLocal(1.8, 5.2), ry: CAMP.ry }
+
 // Dirt tracks between places, as polylines of [x, z].
 export const PATHS = [
   [[0, 12], [-18, -10], [-38, -36]],
@@ -25,12 +35,14 @@ export const PATHS = [
   [[38, -40], [22, -66], [0, -80]],
   [[0, 12], [22, 18], [44, 24]],
   [[0, 12], [-12, 15], [-18, 16]],
+  [[-18, 16], [-24, 25], [campLocal(0, 6).x, campLocal(0, 6).z]],
 ]
 
 const FLAT = [
   ...ZONES.map((z) => ({ x: z.x, z: z.z, r: z.r + 4 })),
   { x: 0, z: 4, r: 16 },
   ...GERS.map((g) => ({ x: g.x, z: g.z, r: 6 })),
+  { x: CAMP.x, z: CAMP.z, r: 11 },
 ]
 
 export const smoothstep = (a, b, v) => {
@@ -114,13 +126,16 @@ export const FRAMES = Array.from({ length: 6 }, (_, i) => {
 })
 export const OVOO = { x: cz.x, z: cz.z - 1 }
 export const CONTACT_SIGNS = [
-  { x: cz.x - 5, z: cz.z + 3.5, ry: 0.35, key: 'linkedin', text: 'LinkedIn' },
-  { x: cz.x + 5, z: cz.z + 3.5, ry: -0.35, key: 'github', text: 'GitHub' },
+  { x: cz.x - 5, z: cz.z + 3.5, ry: 0.35, link: 'linkedin', text: 'LinkedIn' },
+  { x: cz.x + 5, z: cz.z + 3.5, ry: -0.35, link: 'github', text: 'GitHub' },
 ]
 export const SIGNPOST = { x: 8, z: 9 }
 
 export const COLLIDERS = [
   ...GERS.map((g) => ({ x: g.x, z: g.z, r: g.r + 0.3 })),
+  ...[-2.2, 0, 2.2].map((lx) => ({ ...campLocal(lx, 0), r: 2.4 })),
+  ...[-1.7, 1.7].map((lx) => ({ ...campLocal(-5 + lx, 6.5), r: 0.3 })),
+  { x: WOMAN.x, z: WOMAN.z, r: 0.5 },
   ...STELES.map((s) => ({ x: s.x, z: s.z, r: 1.1 })),
   { x: GOAL.x - GOAL.width / 2, z: GOAL.z, r: 0.3 },
   { x: GOAL.x + GOAL.width / 2, z: GOAL.z, r: 0.3 },

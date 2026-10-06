@@ -317,7 +317,7 @@ export default function Landmarks({ photos, onOpenPhoto }) {
       {STELES.map((s) => <Stele key={s.index} {...s} />)}
       {FRAMES.map((f) => <PhotoFrame key={f.index} {...f} photo={photos[f.index]} onOpen={onOpenPhoto} />)}
       <Ovoo />
-      {CONTACT_SIGNS.map((s) => <Signboard key={s.key} {...s} href={profile.links[s.key]} />)}
+      {CONTACT_SIGNS.map((s) => <Signboard key={s.link} {...s} href={profile.links[s.link]} />)}
       <Signpost />
       <Sheep />
     </>

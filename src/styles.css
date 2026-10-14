@@ -201,3 +201,23 @@ kbd {
 .mute svg { width: 20px; height: 20px; fill: currentColor; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .mute[aria-pressed="true"] { color: var(--accent); }
 @media (max-width: 560px) { .mute { width: 32px; height: 32px; } .mute svg { width: 17px; height: 17px; } }
+
+/* Season picker */
+.seasons {
+  position: fixed; z-index: 9; top: 66px; left: clamp(12px, 3vw, 28px);
+  display: flex; gap: 2px; padding: 4px; border-radius: 999px;
+  background: rgba(251, 247, 238, 0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(40, 30, 10, 0.15);
+}
+.seasons button {
+  border: 0; background: none; border-radius: 999px; padding: 6px 11px; display: flex; align-items: center; gap: 6px;
+  font-family: var(--display); font-weight: 600; font-size: 0.88rem; color: var(--ink);
+}
+.seasons button span[aria-hidden] { font-size: 1.05rem; line-height: 1; }
+.seasons button:hover { background: rgba(29, 27, 23, 0.07); }
+.seasons button.active { background: var(--ink); color: var(--paper); }
+@media (max-width: 760px) {
+  .seasons { top: 56px; left: 10px; }
+  .seasons button { padding: 6px 8px; }
+  .season-label { display: none; }
+}

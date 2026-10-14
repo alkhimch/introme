@@ -30,6 +30,19 @@ export const CHILD = { ...campLocal(2.55, 5.35), ry: CAMP.ry }
 export const DOG_HOME = campLocal(0.5, 10)
 export const DOGHOUSE = { ...campLocal(5.1, 3.9), ry: CAMP.ry - 0.35 }
 
+// Forested hills inside the valley (the car can drive up them).
+export const HILLS = [
+  { x: -74, z: 14, r: 19, h: 16, mix: { larch: 0.6, pine: 0.4 } },
+  { x: 12, z: 56, r: 17, h: 13, mix: { birch: 0.55, larch: 0.45 } },
+  { x: 70, z: -46, r: 16, h: 12, mix: { pine: 0.7, larch: 0.3 } },
+]
+const hillShape = (d, r) => (d >= r ? 0 : Math.pow(0.5 + 0.5 * Math.cos((Math.PI * d) / r), 1.15))
+export function hillInfluence(x, z) {
+  let m = 0
+  for (const hl of HILLS) m = Math.max(m, hillShape(Math.hypot(x - hl.x, z - hl.z), hl.r))
+  return m
+}
+
 // Pastures for the herds.
 export const HORSE_HOME = { x: 62, z: -8 }
 export const COW_HOME = { x: -58, z: 52 }
@@ -79,6 +92,10 @@ export function height(x, z) {
   for (const f of FLAT) m = Math.min(m, smoothstep(f.r, f.r + 14, Math.hypot(x - f.x, z - f.z)))
   m = Math.min(m, 0.4 + 0.6 * smoothstep(2, 9, pathDistance(x, z)))
   h *= m
+  for (const hl of HILLS) {
+    const d = Math.hypot(x - hl.x, z - hl.z)
+    if (d < hl.r) h += hl.h * hillShape(d, hl.r) * (0.9 + 0.1 * Math.sin(x * 0.4 + z * 0.3))
+  }
   // Mountain ring around the valley.
   const r = Math.hypot(x, z), a = Math.atan2(z, x)
   const ridge = 18 + 8 * Math.sin(a * 5 + 1) + 4 * Math.sin(a * 11 + 2) + 2 * Math.sin(a * 23)
@@ -159,3 +176,27 @@ export const COLLIDERS = [
 
 // Follow-camera offset from the van (fixed orientation, Bruno-style).
 export const CAMERA_OFFSET = { desktop: [7, 13, 15.5], mobile: [9, 19, 21] }
+
+// ── Trees: forests on the hills plus a small birch grove behind the camp ──
+function makeTrees() {
+  const r = rng(77), out = []
+  HILLS.forEach((hl, hi) => {
+    const count = Math.round(hl.r * hl.r * 0.17)
+    for (let i = 0; i < count; i++) {
+      const a = r() * Math.PI * 2, d = Math.sqrt(r()) * hl.r * 0.82
+      const x = hl.x + Math.cos(a) * d, z = hl.z + Math.sin(a) * d
+      if (Math.hypot(x, z) > WORLD_RADIUS + 6) continue
+      const pick = r()
+      let acc = 0, species = 'pine'
+      for (const [sp, w] of Object.entries(hl.mix)) { acc += w; if (pick <= acc) { species = sp; break } }
+      out.push({ x, z, species, s: 0.8 + r() * 0.6, ry: r() * 6.28, v: r(), hill: hi })
+    }
+  })
+  for (let i = 0; i < 9; i++) {
+    const p = campLocal(-7 + (i % 5) * 3.2 + r() * 1.2, -7.5 - Math.floor(i / 5) * 3 - r() * 1.5)
+    out.push({ x: p.x, z: p.z, species: 'birch', s: 0.85 + r() * 0.4, ry: r() * 6.28, v: r(), hill: -1 })
+  }
+  return out.map((t) => ({ ...t, y: height(t.x, t.z) }))
+}
+export const TREES = makeTrees()
+COLLIDERS.push(...TREES.map((t) => ({ x: t.x, z: t.z, r: 0.45 * t.s })))

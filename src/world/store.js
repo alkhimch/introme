@@ -39,3 +39,22 @@ export function initCamView([x, y, z]) {
   Object.assign(camView, camView.defaults)
 }
 export function resetCamView() { if (camView.defaults) Object.assign(camView, camView.defaults) }
+
+// ── Season (spring / summer / autumn / winter) ──
+export const SEASONS = ['spring', 'summer', 'autumn', 'winter']
+const SEASON_KEY = 'introme-season'
+function defaultSeason() {
+  // Match the real season in Mongolia unless the visitor picked one before.
+  try { const saved = localStorage.getItem(SEASON_KEY); if (SEASONS.includes(saved)) return saved } catch { /* ignore */ }
+  const m = new Date().getMonth()
+  return m >= 2 && m <= 4 ? 'spring' : m >= 5 && m <= 7 ? 'summer' : m >= 8 && m <= 10 ? 'autumn' : 'winter'
+}
+let season = defaultSeason()
+export function setSeason(s) {
+  if (!SEASONS.includes(s) || s === season) return
+  season = s
+  try { localStorage.setItem(SEASON_KEY, s) } catch { /* ignore */ }
+  emit()
+}
+export const getSeason = () => season
+export const useSeason = () => useSyncExternalStore(subscribe, () => season)

@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CAMP, CHILD, DOG_HOME, DOGHOUSE, SWING, WOMAN, campLocal, height } from './layout'
-import { car } from './store'
+import { car, useSeason } from './store'
 
 const Std = (props) => <meshStandardMaterial flatShading roughness={0.9} {...props} />
 
@@ -40,6 +40,7 @@ function Window({ position, ry = 0 }) {
 }
 
 function Cabin() {
+  const winter = useSeason() === 'winter'
   const tex = useMemo(logTexture, [])
   // Two storeys: ground floor F1 + upper floor F2.
   const W = 7, D = 4.6, F1 = 2.8, F2 = 2.6, H = F1 + F2, roofH = 1.9, base = 0.4
@@ -80,6 +81,14 @@ function Cabin() {
         </mesh>
       ))}
       <mesh position={[0, base + H + roofH + 0.05, 0]}><boxGeometry args={[W + 0.95, 0.16, 0.24]} /><Std color="#8c2f21" /></mesh>
+      {/* Winter: a blanket of snow on the roof and the balcony */}
+      {winter && [-1, 1].map((side) => (
+        <mesh key={`snow${side}`} position={[0, base + H + roofH / 2 + 0.13, side * (D / 4 + 0.25)]} rotation={[side * ang, 0, 0]}>
+          <boxGeometry args={[W + 0.95, 0.16, slope + 0.05]} />
+          <Std color="#f4f7fa" />
+        </mesh>
+      ))}
+      {winter && <mesh position={[0, upper + 0.1, D / 2 + 0.9]}><boxGeometry args={[3.3, 0.06, 1.75]} /><Std color="#f4f7fa" /></mesh>}
       {/* Chimney */}
       <mesh position={[W / 2 - 1.3, base + H + roofH * 0.9, -0.6]} castShadow><boxGeometry args={[0.55, 1.6, 0.55]} /><Std color="#9a5a44" /></mesh>
       {/* Ground floor: door, porch, steps */}
@@ -298,6 +307,7 @@ function Dog() {
 
 // The dog's own little kennel, with a food bowl and a bone.
 function Doghouse() {
+  const winter = useSeason() === 'winter'
   const y = height(DOGHOUSE.x, DOGHOUSE.z)
   const W = 1.25, D = 1.45, H = 0.95, roofH = 0.55
   const ang = Math.atan2(roofH, W / 2 + 0.12), slope = Math.hypot(W / 2 + 0.12, roofH)
@@ -323,6 +333,12 @@ function Doghouse() {
         <mesh key={sd} position={[sd * (W / 4 + 0.06), 0.12 + H + roofH / 2, 0]} rotation={[0, 0, -sd * ang]} castShadow>
           <boxGeometry args={[slope, 0.08, D + 0.35]} />
           <Std color="#b5432f" />
+        </mesh>
+      ))}
+      {winter && [-1, 1].map((sd) => (
+        <mesh key={`s${sd}`} position={[sd * (W / 4 + 0.06), 0.12 + H + roofH / 2 + 0.07, 0]} rotation={[0, 0, -sd * ang]}>
+          <boxGeometry args={[slope + 0.04, 0.07, D + 0.37]} />
+          <Std color="#f4f7fa" />
         </mesh>
       ))}
       {/* Arched doorway */}

@@ -10,8 +10,10 @@ Hop in a UAZ-452 "Purgon" and drive across a low-poly Mongolian steppe:
 - **Photographer** — framed prints standing in the grass (click to open)
 - **Contact** — an ovoo with khadag, and LinkedIn / GitHub signs
 
+Four seasons (spring, summer, autumn, winter) change the ground, grass, forests, sky, light and weather — falling snow, autumn leaves, spring petals. Three forested hills of pine, larch and birch rise inside the valley.
+
 Driving into a zone opens its info panel. The top menu teleports straight to any zone.
-Controls: WASD / arrow keys, Space to brake, R to reset; on-screen pedals on touch devices.
+Controls: WASD / arrow keys, Space to brake, R to reset, M to mute, 1–4 to change season; drag to look around; on-screen pedals on touch devices.
 
 ## Edit your content
 

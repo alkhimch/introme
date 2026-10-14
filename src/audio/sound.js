@@ -7,6 +7,15 @@ let master, musicBus, sfxBus, reverb, noiseBuffer
 let engine = null, screech = null
 let musicTimer = 0
 let lastBleat = 0
+let windGain = null
+let windLevel = 0.025
+const WIND = { spring: 0.022, summer: 0.025, autumn: 0.04, winter: 0.065 }
+
+// Stronger wind in autumn and winter.
+export function setSeasonAudio(season) {
+  windLevel = WIND[season] ?? 0.025
+  if (ctx && windGain) windGain.gain.setTargetAtTime(windLevel, ctx.currentTime, 1.5)
+}
 
 // ── Mute state (React-visible, persisted per browser) ──
 let muted = false
@@ -221,7 +230,8 @@ function startMusic() {
   // Gentle wind bed
   const wind = noiseSource()
   const wf = ctx.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 500
-  const wg = ctx.createGain(); wg.gain.value = 0.025
+  const wg = ctx.createGain(); wg.gain.value = windLevel
+  windGain = wg
   const wl = ctx.createOscillator(); wl.frequency.value = 0.07
   const wd = ctx.createGain(); wd.gain.value = 260
   wl.connect(wd).connect(wf.frequency)

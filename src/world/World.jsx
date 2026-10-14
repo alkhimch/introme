@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import Terrain from './Terrain'
-import { Clouds, SKY, SkyDome } from './Sky'
+import { Clouds, SeasonEnvironment, SkyDome } from './Sky'
 import Vegetation from './Vegetation'
 import Car from './Car'
 import NameLetters from './NameLetters'
@@ -12,6 +12,8 @@ import Hobbies from './Hobbies'
 import OrbitInput from './OrbitInput'
 import Camp from './Camp'
 import Herds from './Herds'
+import Trees from './Trees'
+import Weather from './Weather'
 
 export default function World({ photos, onOpenPhoto, mobile }) {
   return (
@@ -22,13 +24,14 @@ export default function World({ photos, onOpenPhoto, mobile }) {
       camera={{ fov: mobile ? 55 : 42, near: 0.5, far: 900, position: [8, 14, 30] }}
       gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
     >
-      <fog attach="fog" args={[SKY.fog, 70, 230]} />
-      <hemisphereLight args={['#cfe2ff', '#8a7a4f', 1.1]} />
+      <SeasonEnvironment />
       <ambientLight intensity={0.15} />
       <SkyDome />
       <Clouds />
       <Terrain />
       <Vegetation mobile={mobile} />
+      <Trees />
+      <Weather mobile={mobile} />
       <Zones />
       <OrbitInput />
       <Car mobile={mobile} />

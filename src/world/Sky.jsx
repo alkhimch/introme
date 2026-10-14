@@ -1,19 +1,25 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { rng } from './layout'
-
-export const SKY = { top: '#4f8fd0', horizon: '#f3dcb4', fog: '#e9d6b5' }
+import { useSeason } from './store'
+import { SEASON_LOOK } from './seasons'
 
 export function SkyDome() {
-  const uniforms = useMemo(
-    () => ({ uTop: { value: new THREE.Color(SKY.top) }, uHorizon: { value: new THREE.Color(SKY.horizon) } }),
-    [],
-  )
+  const season = useSeason()
+  const uniforms = useMemo(() => ({ uTop: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() } }), [])
+  const mat = useRef()
+  useEffect(() => {
+    const sky = SEASON_LOOK[season].sky
+    const u = mat.current.uniforms
+    u.uTop.value.set(sky.top)
+    u.uHorizon.value.set(sky.horizon)
+  }, [season])
   return (
     <mesh scale={400}>
       <sphereGeometry args={[1, 32, 16]} />
       <shaderMaterial
+        ref={mat}
         side={THREE.BackSide}
         depthWrite={false}
         fog={false}
@@ -26,8 +32,27 @@ export function SkyDome() {
   )
 }
 
+// Fog and the sky/ground fill light follow the season.
+export function SeasonEnvironment() {
+  const season = useSeason()
+  const scene = useThree((s) => s.scene)
+  const hemi = useRef()
+  useEffect(() => {
+    const look = SEASON_LOOK[season]
+    if (!scene.fog) scene.fog = new THREE.Fog(look.sky.fog, look.sky.near, look.sky.far)
+    scene.fog.color.set(look.sky.fog)
+    scene.fog.near = look.sky.near
+    scene.fog.far = look.sky.far
+    hemi.current.color.set(look.hemi.sky)
+    hemi.current.groundColor.set(look.hemi.ground)
+    hemi.current.intensity = look.hemi.intensity
+  }, [season, scene])
+  return <hemisphereLight ref={hemi} />
+}
+
 // Puffy low-poly clouds drifting over the steppe.
 export function Clouds() {
+  const season = useSeason()
   const group = useRef()
   const clouds = useMemo(() => {
     const r = rng(42)
@@ -36,6 +61,11 @@ export function Clouds() {
       puffs: Array.from({ length: 4 + Math.floor(r() * 4) }, (_, i) => [i * 1.4 - 2 + r(), r() * 0.8, (r() - 0.5) * 1.6, 1 + r() * 0.8]),
     }))
   }, [])
+  const mat = useMemo(() => new THREE.MeshStandardMaterial({ flatShading: true, roughness: 1, emissiveIntensity: 0.25 }), [])
+  useEffect(() => {
+    mat.color.set(SEASON_LOOK[season].cloud)
+    mat.emissive.set(SEASON_LOOK[season].cloud)
+  }, [season, mat])
   useFrame((_, dt) => {
     for (const c of group.current.children) {
       c.position.x += dt * 1.2
@@ -47,9 +77,8 @@ export function Clouds() {
       {clouds.map((c, i) => (
         <group key={i} position={[c.x, c.y, c.z]} scale={c.s}>
           {c.puffs.map(([x, y, z, s], j) => (
-            <mesh key={j} position={[x, y, z]} scale={s}>
+            <mesh key={j} position={[x, y, z]} scale={s} material={mat}>
               <icosahedronGeometry args={[1, 0]} />
-              <meshStandardMaterial color="#ffffff" flatShading roughness={1} emissive="#ffffff" emissiveIntensity={0.25} />
             </mesh>
           ))}
         </group>

@@ -4,10 +4,11 @@ import { usePhotoSources } from './photos'
 import Lightbox from './components/Lightbox'
 import Panel from './components/Panel'
 import Radar from './components/Radar'
-import { initAudio, toggleMuted, useMuted } from './audio/sound'
+import SeasonPicker from './components/SeasonPicker'
+import { initAudio, setSeasonAudio, toggleMuted, useMuted } from './audio/sound'
 import TouchControls from './components/TouchControls'
 import useKeyboard from './components/useKeyboard'
-import { commands, setStarted, useStarted, useToast, useZone } from './world/store'
+import { commands, setStarted, useSeason, useStarted, useToast, useZone } from './world/store'
 
 const World = lazy(() => import('./world/World'))
 
@@ -27,6 +28,8 @@ export default function App() {
   const zone = useZone()
   const toast = useToast()
   const muted = useMuted()
+  const season = useSeason()
+  useEffect(() => { setSeasonAudio(season) }, [season])
 
   // Browsers only allow sound after a user gesture: start audio on the first click / key / touch.
   useEffect(() => {
@@ -86,11 +89,12 @@ export default function App() {
 
       {started && !isTouch && (
         <div className="hint" aria-hidden="true">
-          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · drag to look
+          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · <kbd>1</kbd>–<kbd>4</kbd> season · drag to look
         </div>
       )}
       {started && isTouch && <TouchControls />}
       {started && <Radar mobile={isMobile} />}
+      {started && <SeasonPicker />}
 
       <div className={'intro' + (started ? ' gone' : '')} aria-hidden={started}>
         <div className="intro-card">

@@ -3,7 +3,8 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 import { CAMERA_OFFSET, COLLIDERS, SPAWN, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
-import { camView, car, commands, initCamView, input } from './store'
+import { camView, car, commands, initCamView, input, useSeason } from './store'
+import { SEASON_LOOK } from './seasons'
 import { updateVehicleAudio } from '../audio/sound'
 
 const MAX_SPEED = 20, MAX_REVERSE = -8, ACCEL = 16, BRAKE = 34, TURN = 2.1
@@ -147,6 +148,7 @@ export default function Car({ mobile }) {
   const body = useRef()
   const wheels = [useRef(), useRef(), useRef(), useRef()]
   const sun = useRef()
+  const sunLook = SEASON_LOOK[useSeason()].sun
   const { camera } = useThree()
   const tmp = useMemo(() => ({
     n: new THREE.Vector3(0, 1, 0), nSmooth: new THREE.Vector3(0, 1, 0),
@@ -291,8 +293,8 @@ export default function Car({ mobile }) {
     <>
       <directionalLight
         ref={sun}
-        intensity={2.4}
-        color="#fff1d8"
+        intensity={sunLook.intensity}
+        color={sunLook.color}
         castShadow
         shadow-mapSize={[mobile ? 1024 : 2048, mobile ? 1024 : 2048]}
         shadow-camera-left={-34}

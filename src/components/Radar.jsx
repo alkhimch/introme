@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { CAMP, GERS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
+import { CAMP, GERS, HILLS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
 import { camView, car, commands, setStarted } from '../world/store'
 
 const RANGE = 48 // world units from the van to the radar rim
@@ -55,6 +55,10 @@ export default function Radar({ mobile }) {
       const [ex, ey] = toScreen(0, 0)
       ctx.strokeStyle = 'rgba(200, 190, 160, 0.5)'; ctx.lineWidth = 2
       ctx.beginPath(); ctx.arc(ex, ey, WORLD_RADIUS * scale, 0, Math.PI * 2); ctx.stroke()
+
+      // Forested hills
+      ctx.fillStyle = 'rgba(70, 120, 70, 0.55)'
+      for (const hl of HILLS) { const [sx, sy] = toScreen(hl.x, hl.z); ctx.beginPath(); ctx.arc(sx, sy, hl.r * 0.8 * scale, 0, Math.PI * 2); ctx.fill() }
 
       // Dirt tracks
       ctx.strokeStyle = 'rgba(214, 178, 120, 0.75)'; ctx.lineWidth = Math.max(2, 3.5 * scale); ctx.lineCap = 'round'; ctx.lineJoin = 'round'

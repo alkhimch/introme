@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { commands, input } from '../world/store'
+import { SEASONS, commands, input, setSeason } from '../world/store'
 import { toggleMuted } from '../audio/sound'
 
 const MAP = {
@@ -18,6 +18,8 @@ export default function useKeyboard(onKey) {
       if (k) { input[k] = true; e.preventDefault(); onKey?.('drive') }
       if (e.code === 'KeyR') commands.resetCount++
       if (e.code === 'KeyM' && !e.repeat) toggleMuted()
+      const digit = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code)
+      if (digit >= 0) setSeason(SEASONS[digit])
     }
     const up = (e) => { const k = MAP[e.code]; if (k) input[k] = false }
     const blur = () => Object.keys(input).forEach((k) => (input[k] = false))

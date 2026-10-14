@@ -4,6 +4,7 @@ import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { CONTACT_SIGNS, FRAMES, GERS, OVOO, SIGNPOST, STELES, ZONES, height, rng } from './layout'
 import { camView, car } from './store'
+import { useEnvironment } from './Sky'
 import { bleat } from '../audio/sound'
 import { FONT_URL } from './NameLetters'
 import { developer, profile } from '../content'
@@ -15,6 +16,7 @@ const Std = (props) => <meshStandardMaterial flatShading roughness={0.95} {...pr
 // ── Ger (yurt) ──
 function Ger({ x, z, r, rot }) {
   const y = height(x, z)
+  const lights = useEnvironment().lights
   return (
     <group position={[x, y, z]} rotation={[0, rot, 0]}>
       <mesh position={[0, 0.85, 0]} castShadow receiveShadow>
@@ -27,7 +29,7 @@ function Ger({ x, z, r, rot }) {
       </mesh>
       <mesh position={[0, 2.95, 0]}>
         <cylinderGeometry args={[0.38, 0.45, 0.2, 12]} />
-        <Std color={ORANGE} />
+        <Std color={ORANGE} emissive="#ff9a3a" emissiveIntensity={lights * 0.8} />
       </mesh>
       {[0.35, 1.2, 1.62].map((h) => (
         <mesh key={h} position={[0, h, 0]}>
@@ -41,8 +43,10 @@ function Ger({ x, z, r, rot }) {
       </mesh>
       <mesh position={[0, 0.7, r + 0.07]}>
         <boxGeometry args={[0.55, 0.9, 0.02]} />
-        <Std color="#f2b33d" />
+        <Std color="#f2b33d" emissive="#ffb347" emissiveIntensity={lights * 1.4} />
       </mesh>
+      {/* Warm glow from the door and the roof crown at night */}
+      {lights > 0 && <pointLight position={[0, 1.0, r + 1.2]} color="#ffb35a" intensity={lights * 6} distance={9} decay={1.6} />}
       <mesh position={[r * 0.45, 3.0, -r * 0.2]} castShadow>
         <cylinderGeometry args={[0.07, 0.07, 1.2, 6]} />
         <Std color="#5d5a55" />

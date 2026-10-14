@@ -11,10 +11,40 @@ let windGain = null
 let windLevel = 0.025
 const WIND = { spring: 0.022, summer: 0.025, autumn: 0.04, winter: 0.065 }
 
-// Stronger wind in autumn and winter.
-export function setSeasonAudio(season) {
-  windLevel = WIND[season] ?? 0.025
+let crickets = false
+let cricketTimer = 0
+
+// Stronger wind in autumn and winter; crickets on warm evenings and nights.
+export function setSeasonAudio(season, time = 'day') {
+  windLevel = (WIND[season] ?? 0.025) * (time === 'night' ? 0.7 : 1)
   if (ctx && windGain) windGain.gain.setTargetAtTime(windLevel, ctx.currentTime, 1.5)
+  crickets = time !== 'day' && (season === 'summer' || season === 'spring' || season === 'autumn')
+}
+
+// A cricket: a few rapid high chirps.
+function chirp() {
+  const t = ctx.currentTime
+  const f = 4200 + Math.random() * 900
+  const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null
+  const out = ctx.createGain(); out.gain.value = 0.018 + Math.random() * 0.02
+  for (let k = 0; k < 3 + Math.floor(Math.random() * 3); k++) {
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f
+    const g = ctx.createGain()
+    const s = t + k * 0.07
+    g.gain.setValueAtTime(0, s)
+    g.gain.linearRampToValueAtTime(1, s + 0.008)
+    g.gain.linearRampToValueAtTime(0, s + 0.045)
+    o.connect(g).connect(out)
+    o.start(s); o.stop(s + 0.05)
+  }
+  if (pan) { pan.pan.value = Math.random() * 2 - 1; out.connect(pan).connect(musicBus) } else out.connect(musicBus)
+}
+function startCrickets() {
+  clearInterval(cricketTimer)
+  cricketTimer = setInterval(() => {
+    if (!crickets || ctx.state !== 'running') return
+    if (Math.random() < 0.55) chirp()
+  }, 420)
 }
 
 // ── Mute state (React-visible, persisted per browser) ──
@@ -62,6 +92,7 @@ export function initAudio() {
   engine = makeEngine()
   screech = makeScreech()
   startMusic()
+  startCrickets()
   if (muted) ctx.suspend()
 
   document.addEventListener('visibilitychange', () => {

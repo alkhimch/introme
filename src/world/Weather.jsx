@@ -2,7 +2,8 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { height } from './layout'
-import { car, useSeason } from './store'
+import { car, useSeason, useTimeOfDay } from './store'
+import { CAMP, LAKE } from './layout'
 
 // Particles live in a box that follows the van; anything leaving the box wraps
 // round to the other side, so the effect looks endless at a fixed cost.
@@ -113,15 +114,50 @@ function Fluttering({ count, colors, size, fall, drift }) {
   )
 }
 
+// ── Warm-season nights: fireflies drifting around the lake and the camp ──
+function Fireflies({ count }) {
+  const points = useRef()
+  const data = useMemo(() => {
+    const homes = [LAKE, CAMP, { x: 0, z: 14 }]
+    const items = Array.from({ length: count }, (_, i) => {
+      const h = homes[i % homes.length], a = Math.random() * 6.28, r = 4 + Math.random() * 12
+      return { x: h.x + Math.cos(a) * r, z: h.z + Math.sin(a) * r, phase: Math.random() * 6.28, speed: 0.3 + Math.random() * 0.5 }
+    })
+    return { items, pos: new Float32Array(count * 3), tex: softDot() }
+  }, [count])
+  useFrame((st) => {
+    const t = st.clock.elapsedTime
+    const p = data.pos
+    data.items.forEach((f, i) => {
+      // Lazy wandering loops, and a slow blink by dipping below the grass.
+      const blink = Math.sin(t * 1.7 + f.phase * 3) > -0.3 ? 0 : -3
+      p[i * 3] = f.x + Math.sin(t * f.speed + f.phase) * 2.2
+      p[i * 3 + 1] = height(f.x, f.z) + 0.8 + Math.sin(t * f.speed * 1.7 + f.phase) * 0.5 + blink
+      p[i * 3 + 2] = f.z + Math.cos(t * f.speed * 0.8 + f.phase) * 2.2
+    })
+    points.current.geometry.attributes.position.needsUpdate = true
+  })
+  return (
+    <points ref={points} frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[data.pos, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.45} map={data.tex} transparent depthWrite={false} color="#d8ff7a" blending={THREE.AdditiveBlending} sizeAttenuation fog={false} />
+    </points>
+  )
+}
+
 export default function Weather({ mobile }) {
   const season = useSeason()
+  const time = useTimeOfDay()
   const scale = (mobile ? 0.5 : 1) * (reducedMotion ? 0.4 : 1)
+  const fireflies = time !== 'day' && (season === 'summer' || season === 'spring')
   if (season === 'winter') return <Snow key="snow" count={Math.round(2600 * scale)} />
   if (season === 'autumn') {
     return <Fluttering key="leaves" count={Math.round(320 * scale)} colors={['#e3a42c', '#f0b938', '#d6602a', '#b8452a', '#c98a3a']} size={[0.32, 0.22]} fall={1.3} drift={0.5} />
   }
   if (season === 'spring') {
-    return <Fluttering key="petals" count={Math.round(180 * scale)} colors={['#f7d6e6', '#ffffff', '#f2b7cf']} size={[0.16, 0.12]} fall={0.6} drift={0.9} />
+    return <>{fireflies && <Fireflies count={Math.round(90 * scale)} />}<Fluttering key="petals" count={Math.round(180 * scale)} colors={['#f7d6e6', '#ffffff', '#f2b7cf']} size={[0.16, 0.12]} fall={0.6} drift={0.9} /></>
   }
-  return null
+  return fireflies ? <Fireflies count={Math.round(140 * scale)} /> : null
 }

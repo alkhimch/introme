@@ -59,3 +59,48 @@ export const TREE_LOOK = {
   },
 }
 export const SNOW = C('#f4f7fa')
+
+// ── Time of day: blended on top of the season's daylight look ──
+export const TIME_LOOK = {
+  day: { label: 'Day', icon: '☀️' },
+  evening: {
+    label: 'Evening', icon: '🌇', mix: 0.65,
+    sky: { top: '#3e5a9c', horizon: '#f39a5a', fog: '#d99a78' },
+    sun: { color: '#ffae72', scale: 0.7 }, hemi: { sky: '#e0b8a8', ground: '#5a4a52', scale: 0.75 },
+    cloud: '#f4b79a', sunDir: [-0.95, 0.32, 0.25], stars: 0.15, ambient: 0.12, lights: 0.6,
+  },
+  night: {
+    label: 'Night', icon: '🌙', mix: 0.88,
+    sky: { top: '#060c22', horizon: '#1c2950', fog: '#141d38' },
+    sun: { color: '#9fb6ff', scale: 0.22 }, hemi: { sky: '#3c4c80', ground: '#141826', scale: 0.42 },
+    cloud: '#3a4468', sunDir: [0.45, 0.85, -0.35], stars: 1, ambient: 0.08, lights: 1,
+  },
+}
+
+// Final environment for a season + time of day.
+export function environment(season, time) {
+  const s = SEASON_LOOK[season], t = TIME_LOOK[time]
+  const base = {
+    top: C(s.sky.top), horizon: C(s.sky.horizon), fog: C(s.sky.fog), near: s.sky.near, far: s.sky.far,
+    sunColor: C(s.sun.color), sunIntensity: s.sun.intensity,
+    hemiSky: C(s.hemi.sky), hemiGround: C(s.hemi.ground), hemiIntensity: s.hemi.intensity,
+    cloud: C(s.cloud), sunDir: [-0.55, 1, 0.45], stars: 0, ambient: 0.15, lights: 0,
+  }
+  if (!t.mix) return base
+  const k = t.mix
+  base.top.lerp(C(t.sky.top), k)
+  base.horizon.lerp(C(t.sky.horizon), k)
+  base.fog.lerp(C(t.sky.fog), k)
+  base.sunColor.lerp(C(t.sun.color), k)
+  base.sunIntensity *= t.sun.scale
+  base.hemiSky.lerp(C(t.hemi.sky), k)
+  base.hemiGround.lerp(C(t.hemi.ground), k)
+  base.hemiIntensity *= t.hemi.scale
+  base.cloud.lerp(C(t.cloud), k)
+  base.sunDir = t.sunDir
+  base.stars = t.stars
+  base.ambient = t.ambient
+  base.lights = t.lights
+  if (time === 'night') { base.near *= 0.8; base.far *= 0.85 }
+  return base
+}

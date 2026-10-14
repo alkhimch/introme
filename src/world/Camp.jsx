@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CAMP, CHILD, DOG_HOME, DOGHOUSE, SWING, WOMAN, campLocal, height } from './layout'
 import { car, useSeason } from './store'
+import { useEnvironment } from './Sky'
 
 const Std = (props) => <meshStandardMaterial flatShading roughness={0.9} {...props} />
 
@@ -26,10 +27,11 @@ function logTexture() {
 }
 
 function Window({ position, ry = 0 }) {
+  const lights = useEnvironment().lights
   return (
     <group position={position} rotation={[0, ry, 0]}>
       <mesh><boxGeometry args={[1.1, 1.0, 0.08]} /><Std color="#f4efe4" /></mesh>
-      <mesh position={[0, 0, 0.03]}><boxGeometry args={[0.9, 0.8, 0.04]} /><meshStandardMaterial color="#9cc4d8" roughness={0.2} metalness={0.2} /></mesh>
+      <mesh position={[0, 0, 0.03]}><boxGeometry args={[0.9, 0.8, 0.04]} /><meshStandardMaterial color={lights > 0 ? '#ffd88a' : '#9cc4d8'} emissive="#ffc061" emissiveIntensity={lights * 1.6} roughness={0.2} metalness={0.2} /></mesh>
       <mesh position={[0, 0, 0.06]}><boxGeometry args={[0.06, 0.8, 0.02]} /><Std color="#f4efe4" /></mesh>
       <mesh position={[0, 0, 0.06]}><boxGeometry args={[0.9, 0.06, 0.02]} /><Std color="#f4efe4" /></mesh>
       {[-0.78, 0.78].map((x) => (
@@ -41,6 +43,7 @@ function Window({ position, ry = 0 }) {
 
 function Cabin() {
   const winter = useSeason() === 'winter'
+  const lights = useEnvironment().lights
   const tex = useMemo(logTexture, [])
   // Two storeys: ground floor F1 + upper floor F2.
   const W = 7, D = 4.6, F1 = 2.8, F2 = 2.6, H = F1 + F2, roofH = 1.9, base = 0.4
@@ -126,6 +129,10 @@ function Cabin() {
       {[base + 1.5, upper + 1.2].flatMap((wy) => [-2.0, 2.0].map((wx) => (
         <Window key={`b${wy}${wx}`} position={[wx, wy, -D / 2 - 0.03]} ry={Math.PI} />
       )))}
+      {/* Porch lamp: warm light spilling onto the yard at night */}
+      <mesh position={[0.9, base + 2.3, D / 2 + 0.12]}><boxGeometry args={[0.18, 0.26, 0.18]} /><Std color="#2b2420" /></mesh>
+      <mesh position={[0.9, base + 2.25, D / 2 + 0.22]}><boxGeometry args={[0.12, 0.16, 0.04]} /><meshStandardMaterial color="#ffe2a0" emissive="#ffcf6a" emissiveIntensity={lights * 3} /></mesh>
+      {lights > 0 && <pointLight position={[0, base + 2.2, D / 2 + 2]} color="#ffc673" intensity={lights * 14} distance={16} decay={1.5} />}
       {/* A little bench by the door */}
       <mesh position={[-2.6, 0.8, D / 2 + 0.6]} castShadow><boxGeometry args={[1.4, 0.1, 0.45]} /><Std color="#7a4f2c" /></mesh>
       {[-3.2, -2.0].map((x) => (

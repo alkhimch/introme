@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { CAMP, GERS, HILLS, NAME_POS, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
+import { CAMP, GERS, HILLS, LAKE, NAME_POS, RIVER, RIVER_HALF_WIDTH, lakeRadius, PATHS, WORLD_RADIUS, ZONES } from '../world/layout'
 import { camView, car, commands, setStarted } from '../world/store'
 
 const RANGE = 48 // world units from the van to the radar rim
@@ -59,6 +59,20 @@ export default function Radar({ mobile }) {
       // Forested hills
       ctx.fillStyle = 'rgba(70, 120, 70, 0.55)'
       for (const hl of HILLS) { const [sx, sy] = toScreen(hl.x, hl.z); ctx.beginPath(); ctx.arc(sx, sy, hl.r * 0.8 * scale, 0, Math.PI * 2); ctx.fill() }
+
+      // River and lake
+      ctx.strokeStyle = 'rgba(90, 160, 220, 0.85)'; ctx.fillStyle = 'rgba(90, 160, 220, 0.85)'
+      ctx.lineWidth = Math.max(2, RIVER_HALF_WIDTH * 2 * scale); ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+      ctx.beginPath()
+      RIVER.forEach(([x, z], i) => { const [sx, sy] = toScreen(x, z); i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy) })
+      ctx.stroke()
+      ctx.beginPath()
+      for (let i = 0; i <= 36; i++) {
+        const a = (i / 36) * Math.PI * 2, r = lakeRadius(a)
+        const [sx, sy] = toScreen(LAKE.x + Math.cos(a) * r, LAKE.z + Math.sin(a) * r)
+        i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy)
+      }
+      ctx.fill()
 
       // Dirt tracks
       ctx.strokeStyle = 'rgba(214, 178, 120, 0.75)'; ctx.lineWidth = Math.max(2, 3.5 * scale); ctx.lineCap = 'round'; ctx.lineJoin = 'round'

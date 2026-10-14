@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { CAMP, ZONES, height, hillInfluence, pathDistance, rng, WORLD_RADIUS } from './layout'
+import { CAMP, ZONES, height, hillInfluence, pathDistance, rng, waterDistance, WORLD_RADIUS } from './layout'
 import { useSeason } from './store'
 import { SEASON_LOOK } from './seasons'
 
@@ -11,6 +11,7 @@ function scatter(count, seed, accept) {
     const a = r() * Math.PI * 2, d = Math.sqrt(r()) * (WORLD_RADIUS + 25)
     const x = Math.cos(a) * d, z = Math.sin(a) * d
     if (pathDistance(x, z) < 2.6) continue
+    if (waterDistance(x, z) < 1.2) continue
     if (ZONES.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.r - 3)) continue
     if (Math.hypot(x, z + 2) < 11) continue // keep the name area clean
     if (Math.hypot(x - CAMP.x, z - CAMP.z) < 10) continue // and the camp yard

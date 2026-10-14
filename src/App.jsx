@@ -8,7 +8,7 @@ import SeasonPicker from './components/SeasonPicker'
 import { initAudio, setSeasonAudio, toggleMuted, useMuted } from './audio/sound'
 import TouchControls from './components/TouchControls'
 import useKeyboard from './components/useKeyboard'
-import { commands, setStarted, useSeason, useStarted, useToast, useZone } from './world/store'
+import { commands, setStarted, useSeason, useStarted, useTimeOfDay, useToast, useZone } from './world/store'
 
 const World = lazy(() => import('./world/World'))
 
@@ -29,7 +29,8 @@ export default function App() {
   const toast = useToast()
   const muted = useMuted()
   const season = useSeason()
-  useEffect(() => { setSeasonAudio(season) }, [season])
+  const timeOfDay = useTimeOfDay()
+  useEffect(() => { setSeasonAudio(season, timeOfDay) }, [season, timeOfDay])
 
   // Browsers only allow sound after a user gesture: start audio on the first click / key / touch.
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function App() {
 
       {started && !isTouch && (
         <div className="hint" aria-hidden="true">
-          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · <kbd>1</kbd>–<kbd>4</kbd> season · drag to look
+          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · <kbd>1</kbd>–<kbd>4</kbd> season · <kbd>N</kbd> day/night
         </div>
       )}
       {started && isTouch && <TouchControls />}

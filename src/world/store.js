@@ -58,3 +58,22 @@ export function setSeason(s) {
 }
 export const getSeason = () => season
 export const useSeason = () => useSyncExternalStore(subscribe, () => season)
+
+// ── Time of day (day / evening / night) ──
+export const TIMES = ['day', 'evening', 'night']
+const TIME_KEY = 'introme-time'
+function defaultTime() {
+  try { const saved = localStorage.getItem(TIME_KEY); if (TIMES.includes(saved)) return saved } catch { /* ignore */ }
+  const h = new Date().getHours()
+  return h >= 21 || h < 6 ? 'night' : h >= 18 ? 'evening' : 'day'
+}
+let timeOfDay = defaultTime()
+export function setTimeOfDay(t) {
+  if (!TIMES.includes(t) || t === timeOfDay) return
+  timeOfDay = t
+  try { localStorage.setItem(TIME_KEY, t) } catch { /* ignore */ }
+  emit()
+}
+export const cycleTimeOfDay = () => setTimeOfDay(TIMES[(TIMES.indexOf(timeOfDay) + 1) % TIMES.length])
+export const getTimeOfDay = () => timeOfDay
+export const useTimeOfDay = () => useSyncExternalStore(subscribe, () => timeOfDay)

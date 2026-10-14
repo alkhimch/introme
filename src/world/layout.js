@@ -30,6 +30,31 @@ export const CHILD = { ...campLocal(2.55, 5.35), ry: CAMP.ry }
 export const DOG_HOME = campLocal(0.5, 10)
 export const DOGHOUSE = { ...campLocal(5.1, 3.9), ry: CAMP.ry - 0.35 }
 
+// A river from the north-western mountains feeding a lake (frozen in winter).
+export const WATER_Y = -0.5
+export const RIVER = [[-104, 84], [-86, 78], [-68, 76], [-50, 73], [-36, 70], [-24, 69]]
+export const RIVER_HALF_WIDTH = 2.6
+export const LAKE = { x: -14, z: 68, r: 10 }
+const RIVER_SEGS = RIVER.slice(1).map((b, i) => [RIVER[i], b])
+function segDistance(x, z, segs) {
+  let best = Infinity
+  for (const [[ax, az], [bx, bz]] of segs) {
+    const dx = bx - ax, dz = bz - az
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)))
+    best = Math.min(best, Math.hypot(x - ax - dx * t, z - az - dz * t))
+  }
+  return best
+}
+export const riverDistance = (x, z) => segDistance(x, z, RIVER_SEGS)
+// Lake shoreline radius at a given angle (slightly irregular, not a perfect circle).
+export const lakeRadius = (a) => LAKE.r * (1 + 0.12 * Math.sin(3 * a + 0.4) + 0.06 * Math.sin(5 * a + 1.3))
+export function lakeDistance(x, z) {
+  const dx = x - LAKE.x, dz = z - LAKE.z
+  return Math.hypot(dx, dz) - lakeRadius(Math.atan2(dz, dx))
+}
+// Distance to the nearest open water edge (negative = in the water).
+export const waterDistance = (x, z) => Math.min(riverDistance(x, z) - RIVER_HALF_WIDTH, lakeDistance(x, z))
+
 // Forested hills inside the valley (the car can drive up them).
 export const HILLS = [
   { x: -74, z: 14, r: 19, h: 16, mix: { larch: 0.6, pine: 0.4 } },
@@ -91,7 +116,12 @@ export function height(x, z) {
   let m = 1
   for (const f of FLAT) m = Math.min(m, smoothstep(f.r, f.r + 14, Math.hypot(x - f.x, z - f.z)))
   m = Math.min(m, 0.4 + 0.6 * smoothstep(2, 9, pathDistance(x, z)))
+  // Flat banks around the water, then carve the river bed and the lake basin.
+  const dr = riverDistance(x, z), dl = lakeDistance(x, z)
+  m = Math.min(m, smoothstep(RIVER_HALF_WIDTH, RIVER_HALF_WIDTH + 12, dr), smoothstep(0, 12, dl))
   h *= m
+  h -= 1.5 * smoothstep(RIVER_HALF_WIDTH + 1.2, RIVER_HALF_WIDTH * 0.3, dr)
+  h -= 2.2 * smoothstep(1.5, -LAKE.r * 0.5, dl)
   for (const hl of HILLS) {
     const d = Math.hypot(x - hl.x, z - hl.z)
     if (d < hl.r) h += hl.h * hillShape(d, hl.r) * (0.9 + 0.1 * Math.sin(x * 0.4 + z * 0.3))
@@ -200,3 +230,15 @@ function makeTrees() {
 }
 export const TREES = makeTrees()
 COLLIDERS.push(...TREES.map((t) => ({ x: t.x, z: t.z, r: 0.45 * t.s })))
+
+// Lake pier (pointing towards the start area) and its rowboat — kept solid for the van.
+export const PIER_ANGLE = Math.atan2(SPAWN.z - LAKE.z, SPAWN.x - LAKE.x)
+export const PIER = (() => {
+  const a = PIER_ANGLE, shore = lakeRadius(a) + 1.2
+  return { x: LAKE.x + Math.cos(a) * shore, z: LAKE.z + Math.sin(a) * shore, ry: Math.atan2(-Math.cos(a), -Math.sin(a)) }
+})()
+export function pierLocal(lx, lz) {
+  const c = Math.cos(PIER.ry), s = Math.sin(PIER.ry)
+  return { x: PIER.x + lx * c + lz * s, z: PIER.z - lx * s + lz * c }
+}
+COLLIDERS.push(...[1.2, 3.4, 5.6].map((lz) => ({ ...pierLocal(0, lz), r: 0.95 })), { ...pierLocal(1.75, 5.2), r: 1.1 })

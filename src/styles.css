@@ -209,6 +209,8 @@ kbd {
   background: rgba(251, 247, 238, 0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 6px 24px rgba(40, 30, 10, 0.15);
 }
+.seasons .seg { display: flex; gap: 2px; }
+.seg-divider { width: 1px; align-self: stretch; margin: 4px 4px; background: var(--line); }
 .seasons button {
   border: 0; background: none; border-radius: 999px; padding: 6px 11px; display: flex; align-items: center; gap: 6px;
   font-family: var(--display); font-weight: 600; font-size: 0.88rem; color: var(--ink);
@@ -218,6 +220,8 @@ kbd {
 .seasons button.active { background: var(--ink); color: var(--paper); }
 @media (max-width: 760px) {
   .seasons { top: 56px; left: 10px; }
-  .seasons button { padding: 6px 8px; }
+  .seasons .seg { display: flex; gap: 2px; }
+.seg-divider { width: 1px; align-self: stretch; margin: 4px 4px; background: var(--line); }
+.seasons button { padding: 6px 8px; }
   .season-label { display: none; }
 }

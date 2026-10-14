@@ -2,14 +2,13 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
-import { CAMERA_OFFSET, COLLIDERS, SPAWN, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
-import { camView, car, commands, initCamView, input, useSeason } from './store'
-import { SEASON_LOOK } from './seasons'
+import { CAMERA_OFFSET, COLLIDERS, SPAWN, WATER_Y, WORLD_RADIUS, ZONES, height, normal, zoneById } from './layout'
+import { camView, car, commands, getSeason, initCamView, input } from './store'
+import { useEnvironment } from './Sky'
 import { updateVehicleAudio } from '../audio/sound'
 
 const MAX_SPEED = 20, MAX_REVERSE = -8, ACCEL = 16, BRAKE = 34, TURN = 2.1
 const CAR_RADIUS = 1.5
-const SUN_DIR = new THREE.Vector3(-0.55, 1, 0.45).normalize()
 
 const OLIVE = '#6b7a45', CREAM = '#ece4cf', GLASS = '#1d2730', DARK = '#23211e'
 
@@ -31,7 +30,7 @@ function Wheel({ position, wheelRef }) {
 }
 
 // UAZ-452 "Purgon" — the van of every countryside trip in Mongolia.
-function Van({ bodyRef, wheels }) {
+function Van({ bodyRef, wheels, lights = 0 }) {
   return (
     <group>
       <group ref={bodyRef}>
@@ -65,13 +64,13 @@ function Van({ bodyRef, wheels }) {
         {[-0.58, 0.58].map((x) => (
           <mesh key={x} position={[x, 1.07, 1.71]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.15, 0.15, 0.06, 12]} />
-            <meshStandardMaterial color="#fff6d8" emissive="#fff0b8" emissiveIntensity={0.6} />
+            <meshStandardMaterial color="#fff6d8" emissive="#fff0b8" emissiveIntensity={0.6 + lights * 4} />
           </mesh>
         ))}
         {[-0.62, 0.62].map((x) => (
           <mesh key={x} position={[x, 1.0, -1.71]}>
             <boxGeometry args={[0.18, 0.22, 0.04]} />
-            <meshStandardMaterial color="#c0392b" emissive="#7a1c12" />
+            <meshStandardMaterial color="#c0392b" emissive="#d02a18" emissiveIntensity={0.3 + lights * 2} />
           </mesh>
         ))}
         {[1.75, -1.75].map((z) => (
@@ -111,7 +110,7 @@ function Dust({ count = 48 }) {
     const st = state.current
     st.t += dt
     const sp = Math.abs(car.speed)
-    if (sp > 4 && st.t > 0.035) {
+    if (sp > (car.inWater ? 1.5 : 4) && st.t > 0.035) {
       st.t = 0
       for (const side of [-0.8, 0.8]) {
         const pt = parts[st.i]
@@ -121,7 +120,8 @@ function Dust({ count = 48 }) {
         pt.p.set(bx, car.y + 0.25, bz)
         pt.v.set((Math.random() - 0.5) * 1.2 - fx * sp * 0.08, 0.8 + Math.random() * 0.8, (Math.random() - 0.5) * 1.2 - fz * sp * 0.08)
         pt.life = 1
-        pt.size = 0.2 + Math.min(1, sp / MAX_SPEED) * 0.45
+        pt.size = (0.2 + Math.min(1, sp / MAX_SPEED) * 0.45) * (car.inWater ? 1.6 : 1)
+        if (car.inWater) pt.v.y += 2.5
       }
     }
     parts.forEach((pt, i) => {
@@ -134,6 +134,8 @@ function Dust({ count = 48 }) {
       ref.current.setMatrixAt(i, tmp.m)
     })
     ref.current.instanceMatrix.needsUpdate = true
+    // White spray in the water, beige dust on land.
+    ref.current.material.color.set(car.inWater ? '#eef6fb' : '#efe2c4')
   })
   return (
     <instancedMesh ref={ref} args={[null, null, count]} frustumCulled={false}>
@@ -148,7 +150,9 @@ export default function Car({ mobile }) {
   const body = useRef()
   const wheels = [useRef(), useRef(), useRef(), useRef()]
   const sun = useRef()
-  const sunLook = SEASON_LOOK[useSeason()].sun
+  const env = useEnvironment()
+  const headTarget = useMemo(() => new THREE.Object3D(), [])
+  const sunDir = useMemo(() => new THREE.Vector3(...env.sunDir).normalize(), [env])
   const { camera } = useThree()
   const tmp = useMemo(() => ({
     n: new THREE.Vector3(0, 1, 0), nSmooth: new THREE.Vector3(0, 1, 0),
@@ -226,6 +230,12 @@ export default function Car({ mobile }) {
     if (r > WORLD_RADIUS) { nx *= WORLD_RADIUS / r; nz *= WORLD_RADIUS / r; car.speed *= 0.6 }
     car.x = nx; car.z = nz
     car.y = height(nx, nz)
+    // Water: wade slowly through the river and lake — or drive on the ice in winter.
+    car.inWater = false
+    if (car.y < WATER_Y) {
+      if (getSeason() === 'winter') car.y = WATER_Y
+      else { car.inWater = true; car.speed *= Math.exp(-1.6 * dt); car.y = Math.max(car.y, WATER_Y - 0.75) }
+    }
 
     updateVehicleAudio({
       speed: car.speed,
@@ -284,7 +294,7 @@ export default function Car({ mobile }) {
     snap.current = false
 
     const s = sun.current
-    s.position.set(car.x + SUN_DIR.x * 60, car.y + SUN_DIR.y * 60, car.z + SUN_DIR.z * 60)
+    s.position.set(car.x + sunDir.x * 60, car.y + sunDir.y * 60, car.z + sunDir.z * 60)
     s.target.position.set(car.x, car.y, car.z)
     s.target.updateMatrixWorld()
   })
@@ -293,8 +303,8 @@ export default function Car({ mobile }) {
     <>
       <directionalLight
         ref={sun}
-        intensity={sunLook.intensity}
-        color={sunLook.color}
+        intensity={env.sunIntensity}
+        color={env.sunColor}
         castShadow
         shadow-mapSize={[mobile ? 1024 : 2048, mobile ? 1024 : 2048]}
         shadow-camera-left={-34}
@@ -307,7 +317,21 @@ export default function Car({ mobile }) {
         shadow-normalBias={0.04}
       />
       <group ref={root}>
-        <Van bodyRef={body} wheels={wheels} />
+        <Van bodyRef={body} wheels={wheels} lights={env.lights} />
+        {/* Headlights for the evening and night */}
+        <primitive object={headTarget} position={[0, 0, 14]} />
+        {env.lights > 0 && (
+          <spotLight
+            position={[0, 1.15, 1.9]}
+            target={headTarget}
+            color="#fff1c8"
+            intensity={env.lights * 180}
+            distance={38}
+            decay={1.5}
+            angle={0.55}
+            penumbra={0.55}
+          />
+        )}
       </group>
       <Dust />
     </>

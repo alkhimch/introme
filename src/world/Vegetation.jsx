@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { CAMP, ZONES, height, hillInfluence, pathDistance, rng, waterDistance, WORLD_RADIUS } from './layout'
+import { CAMP, NAADAM, ZONES, height, hillInfluence, pathDistance, rng, waterDistance, WORLD_RADIUS } from './layout'
 import { useSeason } from './store'
 import { SEASON_LOOK } from './seasons'
 
@@ -15,6 +15,7 @@ function scatter(count, seed, accept) {
     if (ZONES.some((zn) => Math.hypot(x - zn.x, z - zn.z) < zn.r - 3)) continue
     if (Math.hypot(x, z + 2) < 11) continue // keep the name area clean
     if (Math.hypot(x - CAMP.x, z - CAMP.z) < 10) continue // and the camp yard
+    if (Math.hypot(x - NAADAM.x, z - NAADAM.z) < NAADAM.r - 1) continue // and the naadam field
     if (accept && !accept(x, z, r)) continue
     out.push({ x, z, y: height(x, z), r: r(), r2: r(), r3: r() })
   }
@@ -42,15 +43,15 @@ function Instances({ items, geometry, material, transform, colors, castShadow })
   return <instancedMesh ref={ref} args={[geometry, material, items.length]} castShadow={castShadow} receiveShadow />
 }
 
-export default function Vegetation({ mobile }) {
+export default function Vegetation({ mobile, quality }) {
   const season = useSeason()
   const look = SEASON_LOOK[season]
   const data = useMemo(() => {
-    const grass = scatter(mobile ? 1800 : 4200, 11, (x, z) => height(x, z) < 8 || hillInfluence(x, z) > 0.05)
-    const flowers = scatter(mobile ? 500 : 1200, 23, (x, z, r) => height(x, z) < 6 && Math.sin(x * 0.08) * Math.cos(z * 0.07) > -0.2 + r() * 0.4)
+    const grass = scatter(Math.round((mobile ? 2400 : 4200) * quality.grass), 11, (x, z) => height(x, z) < 8 || hillInfluence(x, z) > 0.05)
+    const flowers = scatter(Math.round((mobile ? 700 : 1200) * quality.flowers), 23, (x, z, r) => height(x, z) < 6 && Math.sin(x * 0.08) * Math.cos(z * 0.07) > -0.2 + r() * 0.4)
     const rocks = scatter(160, 37)
     return { grass, flowers, rocks }
-  }, [mobile])
+  }, [mobile, quality])
 
   const res = useMemo(() => ({
     grassGeo: new THREE.ConeGeometry(0.14, 0.7, 3),

@@ -1,4 +1,5 @@
-import { developer, hobbies, profile } from '../content'
+import { useEffect, useRef } from 'react'
+import { developer, guestbook, hobbies, profile } from '../content'
 
 function Work() {
   return (
@@ -82,6 +83,50 @@ function Contact() {
   )
 }
 
+// giscus (GitHub Discussions) comments, once the repo has Discussions switched on.
+function Giscus() {
+  const box = useRef()
+  useEffect(() => {
+    const el = box.current
+    const s = document.createElement('script')
+    s.src = 'https://giscus.app/client.js'
+    s.async = true
+    s.crossOrigin = 'anonymous'
+    Object.entries({
+      repo: guestbook.repo, 'repo-id': guestbook.repoId, category: guestbook.category, 'category-id': guestbook.categoryId,
+      mapping: 'specific', term: 'Guestbook', strict: '0', 'reactions-enabled': '1', 'emit-metadata': '0',
+      'input-position': 'top', theme: 'light', lang: 'en', loading: 'lazy',
+    }).forEach(([k, v]) => s.setAttribute(`data-${k}`, v))
+    el.appendChild(s)
+    return () => { el.innerHTML = '' }
+  }, [])
+  return <div ref={box} className="giscus-box" />
+}
+
+function GuestbookPanel() {
+  const ready = Boolean(guestbook.categoryId)
+  return (
+    <>
+      <p className="eyebrow">Guestbook</p>
+      <h2>Leave a note.</h2>
+      {ready ? (
+        <>
+          <p>Thanks for driving by! Sign in with GitHub to leave a message.</p>
+          <Giscus />
+        </>
+      ) : (
+        <>
+          <p>Thanks for driving all the way out here! The guestbook is being set up — until then, I'd love to hear from you directly.</p>
+          <div className="cta-row">
+            <a className="btn primary" href={profile.links.linkedin} target="_blank" rel="noreferrer">Message me on LinkedIn</a>
+            {profile.email && <a className="btn" href={`mailto:${profile.email}`}>Email</a>}
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
 export default function Panel({ zone, onClose, photos, onOpenPhoto }) {
   return (
     <aside className={'panel' + (zone ? ' open' : '')} aria-live="polite" aria-hidden={!zone}>
@@ -93,6 +138,7 @@ export default function Panel({ zone, onClose, photos, onOpenPhoto }) {
             {zone === 'hobbies' && <HobbiesPanel />}
             {zone === 'photos' && <Photos photos={photos} onOpenPhoto={onOpenPhoto} />}
             {zone === 'contact' && <Contact />}
+            {zone === 'guestbook' && <GuestbookPanel />}
           </div>
         </>
       )}

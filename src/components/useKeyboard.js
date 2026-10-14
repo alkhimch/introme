@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { SEASONS, commands, cycleTimeOfDay, input, setSeason } from '../world/store'
+import { SEASONS, commands, cycleTimeOfDay, input, setPhotoMode, setSeason, toggleRain, getPhotoMode } from '../world/store'
 import { toggleMuted } from '../audio/sound'
 
 const MAP = {
@@ -21,6 +21,8 @@ export default function useKeyboard(onKey) {
       const digit = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code)
       if (digit >= 0) setSeason(SEASONS[digit])
       if (e.code === 'KeyN' && !e.repeat) cycleTimeOfDay()
+      if (e.code === 'KeyP' && !e.repeat) setPhotoMode(!getPhotoMode())
+      if (e.code === 'KeyB' && !e.repeat) toggleRain()
     }
     const up = (e) => { const k = MAP[e.code]; if (k) input[k] = false }
     const blur = () => Object.keys(input).forEach((k) => (input[k] = false))

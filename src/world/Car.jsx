@@ -145,7 +145,7 @@ function Dust({ count = 48 }) {
   )
 }
 
-export default function Car({ mobile }) {
+export default function Car({ mobile, quality }) {
   const root = useRef()
   const body = useRef()
   const wheels = [useRef(), useRef(), useRef(), useRef()]
@@ -306,7 +306,7 @@ export default function Car({ mobile }) {
         intensity={env.sunIntensity}
         color={env.sunColor}
         castShadow
-        shadow-mapSize={[mobile ? 1024 : 2048, mobile ? 1024 : 2048]}
+        shadow-mapSize={[quality.shadowMap, quality.shadowMap]}
         shadow-camera-left={-34}
         shadow-camera-right={34}
         shadow-camera-top={34}

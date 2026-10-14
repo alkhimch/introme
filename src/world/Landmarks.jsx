@@ -3,8 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { CONTACT_SIGNS, FRAMES, GERS, OVOO, SIGNPOST, STELES, ZONES, height, rng } from './layout'
-import { camView, car } from './store'
+import { camView, car, useQuality } from './store'
 import { useEnvironment } from './Sky'
+import { QUALITY } from './quality'
 import { bleat } from '../audio/sound'
 import { FONT_URL } from './NameLetters'
 import { developer, profile } from '../content'
@@ -17,6 +18,7 @@ const Std = (props) => <meshStandardMaterial flatShading roughness={0.95} {...pr
 function Ger({ x, z, r, rot }) {
   const y = height(x, z)
   const lights = useEnvironment().lights
+  const nightLights = QUALITY[useQuality()].nightLights
   return (
     <group position={[x, y, z]} rotation={[0, rot, 0]}>
       <mesh position={[0, 0.85, 0]} castShadow receiveShadow>
@@ -46,7 +48,7 @@ function Ger({ x, z, r, rot }) {
         <Std color="#f2b33d" emissive="#ffb347" emissiveIntensity={lights * 1.4} />
       </mesh>
       {/* Warm glow from the door and the roof crown at night */}
-      {lights > 0 && <pointLight position={[0, 1.0, r + 1.2]} color="#ffb35a" intensity={lights * 6} distance={9} decay={1.6} />}
+      {lights > 0 && nightLights && <pointLight position={[0, 1.0, r + 1.2]} color="#ffb35a" intensity={lights * 6} distance={9} decay={1.6} />}
       <mesh position={[r * 0.45, 3.0, -r * 0.2]} castShadow>
         <cylinderGeometry args={[0.07, 0.07, 1.2, 6]} />
         <Std color="#5d5a55" />
@@ -226,7 +228,7 @@ function Signboard({ x, z, ry, text, href }) {
 function Signpost() {
   const { x, z } = SIGNPOST
   const y = height(x, z)
-  const names = { work: 'Developer', hobbies: 'Hobbies', photos: 'Photography', contact: 'Contact' }
+  const names = { work: 'Developer', hobbies: 'Hobbies', photos: 'Photography', contact: 'Contact', guestbook: 'Guestbook' }
   return (
     <group position={[x, y, z]}>
       <mesh position={[0, 1.7, 0]} castShadow>

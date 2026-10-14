@@ -21,13 +21,19 @@ export function getZone() { return ui.zone }
 export function setStarted() { if (!ui.started) { ui.started = true; emit() } }
 export const useStarted = () => useSyncExternalStore(subscribe, () => ui.started)
 
-// Short-lived banner messages (e.g. "GOAL!").
+// Short-lived banner messages, shown one after another (e.g. a pickup and a race finish together).
 let toast = null
 let toastTimer = 0
+const toastQueue = []
+function nextToast() {
+  const item = toastQueue.shift()
+  toast = item ? item.text : null
+  emit()
+  if (item) toastTimer = setTimeout(nextToast, item.ms)
+}
 export function showToast(text, ms = 2200) {
-  toast = text; emit()
-  clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { toast = null; emit() }, ms)
+  toastQueue.push({ text, ms })
+  if (!toast) { clearTimeout(toastTimer); nextToast() }
 }
 export const useToast = () => useSyncExternalStore(subscribe, () => toast)
 
@@ -77,3 +83,62 @@ export function setTimeOfDay(t) {
 export const cycleTimeOfDay = () => setTimeOfDay(TIMES[(TIMES.indexOf(timeOfDay) + 1) % TIMES.length])
 export const getTimeOfDay = () => timeOfDay
 export const useTimeOfDay = () => useSyncExternalStore(subscribe, () => timeOfDay)
+
+// ── Small persisted UI state helper ──
+function persisted(key, fallback, valid) {
+  let value = fallback
+  try { const raw = localStorage.getItem(key); if (raw !== null) { const v = JSON.parse(raw); if (!valid || valid(v)) value = v } } catch { /* ignore */ }
+  return {
+    get: () => value,
+    set: (v) => { value = v; try { localStorage.setItem(key, JSON.stringify(v)) } catch { /* ignore */ } emit() },
+  }
+}
+
+// ── Graphics quality (chosen on the intro screen) ──
+export const QUALITIES = ['low', 'medium', 'high']
+export function suggestQuality() {
+  const cores = navigator.hardwareConcurrency || 4
+  const mem = navigator.deviceMemory || 4
+  const small = window.innerWidth < 760
+  if (small && (cores <= 6 || mem <= 4)) return 'low'
+  if (small || cores <= 4 || mem <= 4) return 'medium'
+  return 'high'
+}
+const quality = persisted('introme-quality', typeof window !== 'undefined' ? suggestQuality() : 'medium', (v) => QUALITIES.includes(v))
+export const setQuality = (q) => QUALITIES.includes(q) && q !== quality.get() && quality.set(q)
+export const getQuality = quality.get
+export const useQuality = () => useSyncExternalStore(subscribe, quality.get)
+
+// ── Hidden golden shagai (ankle bones) found so far ──
+const found = persisted('introme-shagai', [], Array.isArray)
+export const useFound = () => useSyncExternalStore(subscribe, found.get)
+export const getFound = found.get
+export function collect(id) {
+  if (found.get().includes(id)) return false
+  found.set([...found.get(), id])
+  return true
+}
+export const resetFound = () => found.set([])
+
+// ── Race from the start gate to the summit ──
+const best = persisted('introme-best-race', null, (v) => v === null || typeof v === 'number')
+export const getBestRace = best.get
+export const useBestRace = () => useSyncExternalStore(subscribe, best.get)
+export const setBestRace = (t) => best.set(t)
+export const race = { running: false, start: 0 }
+let raceTick = 0
+export function setRaceRunning(running, start = 0) { race.running = running; race.start = start; raceTick++; emit() }
+export const useRace = () => useSyncExternalStore(subscribe, () => raceTick)
+
+// ── Photo mode ──
+let photoMode = false
+export function setPhotoMode(v) { if (photoMode !== v) { photoMode = v; emit() } }
+export const usePhotoMode = () => useSyncExternalStore(subscribe, () => photoMode)
+export const getPhotoMode = () => photoMode
+export const photoRequest = { pending: false }
+
+// ── Rain (spring / summer / autumn; a heavy snowfall in winter) ──
+const rain = persisted('introme-rain', false, (v) => typeof v === 'boolean')
+export const useRain = () => useSyncExternalStore(subscribe, rain.get)
+export const getRain = rain.get
+export const toggleRain = () => rain.set(!rain.get())

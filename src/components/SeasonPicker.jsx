@@ -1,9 +1,10 @@
 import { SEASON_LOOK, TIME_LOOK } from '../world/seasons'
-import { SEASONS, TIMES, setSeason, setTimeOfDay, useSeason, useTimeOfDay } from '../world/store'
+import { SEASONS, TIMES, setSeason, setTimeOfDay, toggleRain, useRain, useSeason, useTimeOfDay } from '../world/store'
 
 export default function SeasonPicker() {
   const season = useSeason()
   const time = useTimeOfDay()
+  const rain = useRain()
   return (
     <div className="seasons">
       <div role="radiogroup" aria-label="Season" className="seg">
@@ -36,6 +37,15 @@ export default function SeasonPicker() {
           </button>
         ))}
       </div>
+      <span className="seg-divider" aria-hidden="true" />
+      <button
+        className={rain ? 'active' : ''}
+        aria-pressed={rain}
+        onClick={toggleRain}
+        title={season === 'winter' ? 'Blizzard (B)' : 'Rain (B)'}
+      >
+        <span aria-hidden="true">{season === 'winter' ? '🌨️' : '🌧️'}</span>
+      </button>
     </div>
   )
 }

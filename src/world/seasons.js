@@ -78,7 +78,25 @@ export const TIME_LOOK = {
 }
 
 // Final environment for a season + time of day.
-export function environment(season, time) {
+export function environment(season, time, rain = false) {
+  const env = baseEnvironment(season, time)
+  if (!rain) return env
+  // Overcast: grey sky and fog, weaker sun. In winter it becomes a blizzard.
+  const grey = season === 'winter' ? C('#cfd6de') : C('#8f9aa6')
+  const k = time === 'night' ? 0.35 : 0.7
+  env.top.lerp(grey, k)
+  env.horizon.lerp(season === 'winter' ? C('#e4e8ec') : C('#b9c0c6'), k)
+  env.fog.lerp(season === 'winter' ? C('#e1e6eb') : C('#aeb6be'), k)
+  env.cloud.lerp(time === 'night' ? C('#2c3346') : C('#9aa3ad'), 0.8)
+  env.sunIntensity *= 0.5
+  env.hemiIntensity *= 0.9
+  env.near *= season === 'winter' ? 0.5 : 0.6
+  env.far *= season === 'winter' ? 0.6 : 0.7
+  env.rain = true
+  return env
+}
+
+function baseEnvironment(season, time) {
   const s = SEASON_LOOK[season], t = TIME_LOOK[time]
   const base = {
     top: C(s.sky.top), horizon: C(s.sky.horizon), fog: C(s.sky.fog), near: s.sky.near, far: s.sky.far,

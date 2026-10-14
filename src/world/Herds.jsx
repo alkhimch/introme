@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { COW_HOME, HORSE_HOME, WORLD_RADIUS, height, rng } from './layout'
+import { CAMEL_HOME, COW_HOME, GOAT_HOME, HORSE_HOME, RIDER_LOOP, WORLD_RADIUS, YAK_HOME, height, rng } from './layout'
 import { car } from './store'
 
 const Std = (props) => <meshStandardMaterial flatShading roughness={0.95} {...props} />
@@ -152,11 +152,167 @@ function Cows() {
   })
 }
 
+// ── Bactrian camels: tall, two humps, unhurried ──
+const CAMEL_COLORS = ['#c9a46a', '#b88f58', '#d6b47c']
+function Camel({ refs, i, coat }) {
+  return (
+    <group ref={(el) => (refs.current[i] = el)}>
+      <mesh position={[0, 1.55, 0]} castShadow><boxGeometry args={[0.8, 0.85, 1.9]} /><Std color={coat} /></mesh>
+      {[0.42, -0.42].map((z) => (
+        <mesh key={z} position={[0, 2.1, z]} castShadow><coneGeometry args={[0.36, 0.6, 6]} /><Std color={coat} /></mesh>
+      ))}
+      <group name="neck" position={[0, 1.7, 0.9]}>
+        <mesh position={[0, 0.2, 0.25]} rotation={[-0.9, 0, 0]} castShadow><boxGeometry args={[0.28, 0.8, 0.3]} /><Std color={coat} /></mesh>
+        <mesh position={[0, 0.65, 0.5]} rotation={[0.6, 0, 0]}><boxGeometry args={[0.24, 0.55, 0.26]} /><Std color={coat} /></mesh>
+        <mesh position={[0, 0.88, 0.72]} rotation={[0.25, 0, 0]} castShadow><boxGeometry args={[0.26, 0.26, 0.5]} /><Std color={coat} /></mesh>
+        {[-0.09, 0.09].map((x) => (
+          <mesh key={x} position={[x, 1.05, 0.6]}><coneGeometry args={[0.04, 0.12, 4]} /><Std color={coat} /></mesh>
+        ))}
+      </group>
+      <mesh position={[0, 1.55, -0.98]} rotation={[0.3, 0, 0]}><boxGeometry args={[0.08, 0.6, 0.08]} /><Std color="#8a6a3e" /></mesh>
+      {[[-0.25, 0.65], [0.25, 0.65], [-0.25, -0.65], [0.25, -0.65]].map(([x, z], k) => (
+        <group key={k} name={`leg${k}`} position={[x, 1.15, z]}>
+          <mesh position={[0, -0.58, 0]} castShadow><boxGeometry args={[0.16, 1.15, 0.16]} /><Std color={coat} /></mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// ── Goats: small, horned, bearded, jittery ──
+const GOAT_COLORS = [['#f1ece0', '#8a6a3e'], ['#5a4030', '#2b2420'], ['#2b2420', '#f1ece0'], ['#a07a52', '#5a4030']]
+function Goat({ refs, i, coat, horn }) {
+  return (
+    <group ref={(el) => (refs.current[i] = el)}>
+      <mesh position={[0, 0.68, 0]} castShadow><boxGeometry args={[0.38, 0.38, 0.75]} /><Std color={coat} /></mesh>
+      <group name="head" position={[0, 0.85, 0.42]}>
+        <mesh position={[0, 0.06, 0.08]} castShadow><boxGeometry args={[0.2, 0.22, 0.32]} /><Std color={coat} /></mesh>
+        <mesh position={[0, -0.1, 0.18]}><boxGeometry args={[0.06, 0.12, 0.05]} /><Std color={horn} /></mesh>
+        {[-0.06, 0.06].map((x) => (
+          <mesh key={x} position={[x, 0.24, -0.04]} rotation={[-0.7, 0, x > 0 ? -0.2 : 0.2]}><coneGeometry args={[0.035, 0.26, 4]} /><Std color={horn} /></mesh>
+        ))}
+      </group>
+      <mesh position={[0, 0.8, -0.4]} rotation={[-0.8, 0, 0]}><boxGeometry args={[0.06, 0.16, 0.06]} /><Std color={coat} /></mesh>
+      {[[-0.12, 0.25], [0.12, 0.25], [-0.12, -0.25], [0.12, -0.25]].map(([x, z], k) => (
+        <group key={k} name={`leg${k}`} position={[x, 0.5, z]}>
+          <mesh position={[0, -0.25, 0]}><boxGeometry args={[0.08, 0.5, 0.08]} /><Std color={coat} /></mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// ── Yaks: shaggy, dark, with a long skirt of hair ──
+const YAK_COLORS = [['#2b2420', '#2b2420'], ['#3b2c22', '#3b2c22'], ['#2b2420', '#f1ece0']]
+function Yak({ refs, i, coat, face }) {
+  return (
+    <group ref={(el) => (refs.current[i] = el)}>
+      <mesh position={[0, 1.05, 0]} castShadow><boxGeometry args={[0.95, 0.85, 1.7]} /><Std color={coat} /></mesh>
+      <mesh position={[0, 1.45, 0.45]} castShadow><boxGeometry args={[0.85, 0.35, 0.6]} /><Std color={coat} /></mesh>
+      <mesh position={[0, 0.65, 0]}><boxGeometry args={[1.08, 0.45, 1.8]} /><Std color={coat} /></mesh>
+      <group name="head" position={[0, 1.05, 0.9]}>
+        <mesh position={[0, -0.05, 0.22]} castShadow><boxGeometry args={[0.46, 0.45, 0.45]} /><Std color={face} /></mesh>
+        {[-1, 1].map((sd) => (
+          <mesh key={sd} position={[sd * 0.32, 0.22, 0.15]} rotation={[0, 0, sd * -1.1]}><coneGeometry args={[0.05, 0.36, 5]} /><Std color="#e8dfc8" /></mesh>
+        ))}
+      </group>
+      <mesh position={[0, 1.0, -0.92]} rotation={[0.2, 0, 0]}><boxGeometry args={[0.14, 0.7, 0.12]} /><Std color={coat} /></mesh>
+      {[[-0.3, 0.55], [0.3, 0.55], [-0.3, -0.55], [0.3, -0.55]].map(([x, z], k) => (
+        <group key={k} name={`leg${k}`} position={[x, 0.55, z]}>
+          <mesh position={[0, -0.27, 0]}><boxGeometry args={[0.2, 0.55, 0.2]} /><Std color={coat} /></mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// Generic herd renderer: walk/graze animation driven by each animal's speed.
+function Herd({ config, colors, Model, legSwing = 1.6, maxSwing = 0.5, headDown = 0.7 }) {
+  const herd = useHerd(config)
+  const refs = useRef([])
+  useFrame((st, delta) => {
+    const dt = Math.min(delta, 1 / 30)
+    herd.update(dt)
+    herd.animals.forEach((a, i) => {
+      const g = refs.current[i]
+      if (!g) return
+      placeAnimal(g, a, dt, 0)
+      const head = g.getObjectByName('head') || g.getObjectByName('neck')
+      if (head) head.rotation.x = a.look * headDown + Math.sin(st.clock.elapsedTime * 1.3 + i) * 0.05 * a.look
+      for (let k = 0; k < 4; k++) {
+        const leg = g.getObjectByName(`leg${k}`)
+        if (leg) leg.rotation.x = Math.sin(a.phase * legSwing + (k === 0 || k === 3 ? 0 : Math.PI)) * Math.min(maxSwing, a.speed * 0.25)
+      }
+    })
+  })
+  return herd.animals.map((a, i) => {
+    const c = colors[Math.floor(a.variant * colors.length)]
+    const [coat, extra] = Array.isArray(c) ? c : [c, c]
+    return <Model key={i} refs={refs} i={i} coat={coat} horn={extra} face={extra} />
+  })
+}
+
+// A child on a horse, walking slow circles; stops to wave when the van comes by.
+function Rider() {
+  const root = useRef()
+  const horse = useRef([])
+  const arm = useRef()
+  const s = useRef({ a: 0, phase: 0, speed: 1.6 })
+  useFrame((st, delta) => {
+    const dt = Math.min(delta, 1 / 30)
+    const r = s.current
+    const g = root.current
+    const near = Math.hypot(car.x - g.position.x, car.z - g.position.z) < 9
+    r.speed += ((near ? 0 : 1.8) - r.speed) * Math.min(1, dt * 2)
+    r.a += (r.speed / RIDER_LOOP.r) * dt
+    r.phase += r.speed * dt * 2.6
+    const x = RIDER_LOOP.x + Math.cos(r.a) * RIDER_LOOP.r, z = RIDER_LOOP.z + Math.sin(r.a) * RIDER_LOOP.r
+    g.position.set(x, height(x, z), z)
+    g.rotation.y = Math.atan2(-Math.sin(r.a), Math.cos(r.a))
+    const hg = horse.current[0]
+    if (hg) {
+      for (let k = 0; k < 4; k++) {
+        const leg = hg.getObjectByName(`leg${k}`)
+        if (leg) leg.rotation.x = Math.sin(r.phase + (k === 0 || k === 3 ? 0 : Math.PI)) * 0.35 * Math.min(1, r.speed)
+      }
+      const neck = hg.getObjectByName('neck')
+      if (neck) neck.rotation.x = Math.sin(r.phase) * 0.06
+    }
+    arm.current.rotation.z = near ? 2.4 + Math.sin(st.clock.elapsedTime * 9) * 0.3 : 0.25
+  })
+  return (
+    <group ref={root}>
+      <Horse refs={horse} i={0} coat="#a0592d" mane="#4a2b18" />
+      {/* Saddle and rider */}
+      <mesh position={[0, 1.5, -0.05]}><boxGeometry args={[0.64, 0.12, 0.6]} /><Std color="#7a2a20" /></mesh>
+      <group position={[0, 1.55, -0.05]} scale={0.62}>
+        <mesh position={[0, 0.55, 0]} castShadow><cylinderGeometry args={[0.22, 0.32, 1.0, 10]} /><Std color="#e08a2c" /></mesh>
+        <mesh position={[0, 0.5, 0]}><cylinderGeometry args={[0.235, 0.24, 0.12, 10]} /><Std color="#3d6fa8" /></mesh>
+        {[-1, 1].map((sd) => (
+          <mesh key={sd} position={[sd * 0.32, 0.05, 0.05]} rotation={[0, 0, sd * 0.5]}><boxGeometry args={[0.14, 0.6, 0.16]} /><Std color="#e08a2c" /></mesh>
+        ))}
+        <mesh position={[0, 1.22, 0]} castShadow><sphereGeometry args={[0.2, 10, 8]} /><Std color="#d9a77f" /></mesh>
+        <mesh position={[0, 1.4, 0]}><coneGeometry args={[0.2, 0.3, 10]} /><Std color="#c8423b" /></mesh>
+        <group ref={arm} position={[0.26, 0.95, 0]}>
+          <mesh position={[0, -0.25, 0]}><cylinderGeometry args={[0.06, 0.07, 0.5, 6]} /><Std color="#e08a2c" /></mesh>
+        </group>
+        <group position={[-0.26, 0.95, 0]} rotation={[0.6, 0, -0.2]}>
+          <mesh position={[0, -0.25, 0]}><cylinderGeometry args={[0.06, 0.07, 0.5, 6]} /><Std color="#e08a2c" /></mesh>
+        </group>
+      </group>
+    </group>
+  )
+}
+
 export default function Herds() {
   return (
     <>
       <Horses />
       <Cows />
+      <Herd config={{ home: CAMEL_HOME, count: 5, spread: 18, seed: 1618, flee: 3.6, graze: 0.5, fearRadius: 10 }} colors={CAMEL_COLORS} Model={Camel} legSwing={1.3} headDown={0.5} />
+      <Herd config={{ home: GOAT_HOME, count: 9, spread: 14, seed: 577, flee: 6.5, graze: 0.9, fearRadius: 9 }} colors={GOAT_COLORS} Model={Goat} legSwing={2.4} maxSwing={0.7} headDown={0.8} />
+      <Herd config={{ home: YAK_HOME, count: 5, spread: 14, seed: 4242, flee: 3, graze: 0.5, fearRadius: 9 }} colors={YAK_COLORS} Model={Yak} headDown={0.6} />
+      <Rider />
     </>
   )
 }

@@ -6,6 +6,7 @@ export const ZONES = [
   { id: 'hobbies', label: 'HOBBIES', x: 38, z: -40, r: 15 },
   { id: 'photos', label: 'PHOTOGRAPHER', x: 0, z: -80, r: 15 },
   { id: 'contact', label: 'CONTACT', x: 44, z: 24, r: 12 },
+  { id: 'guestbook', label: 'GUESTBOOK', x: -38.3, z: 48.3, r: 6 },
 ]
 export const zoneById = Object.fromEntries(ZONES.map((z) => [z.id, z]))
 
@@ -97,9 +98,17 @@ export const HILL_ROAD = (() => {
   return pts.filter((_, i) => i % 3 === 0 || i === pts.length - 1)
 })()
 
+// Naadam field: wrestling, archery and a ring of flags.
+export const NAADAM = { x: 26, z: 2, r: 11 }
+
 // Pastures for the herds.
 export const HORSE_HOME = { x: 62, z: -8 }
 export const COW_HOME = { x: -58, z: 52 }
+export const CAMEL_HOME = { x: 58, z: 44 }
+export const GOAT_HOME = { x: -42, z: -14 }
+export const YAK_HOME = { x: -68, z: -38 }
+// A child riding a horse in slow circles between the start and the lake.
+export const RIDER_LOOP = { x: -6, z: 32, r: 7 }
 
 // Dirt tracks between places, as polylines of [x, z].
 export const PATHS = [
@@ -119,6 +128,7 @@ const FLAT = [
   { x: 0, z: 4, r: 16 },
   ...GERS.map((g) => ({ x: g.x, z: g.z, r: 6 })),
   { x: CAMP.x, z: CAMP.z, r: 11 },
+  { x: NAADAM.x, z: NAADAM.z, r: NAADAM.r + 2 },
 ]
 
 export const smoothstep = (a, b, v) => {
@@ -301,3 +311,58 @@ const benchSpot = freeSpot(3.8, SUMMIT_FLAG)
 // The bench faces outwards, looking over the valley.
 export const SUMMIT_BENCH = { x: benchSpot.x, z: benchSpot.z, ry: Math.PI / 2 - benchSpot.a }
 COLLIDERS.push({ ...SUMMIT_FLAG, r: 0.85 }, { ...SUMMIT_BENCH, r: 0.8 })
+
+// ── Seven golden shagai hidden around the world ──
+// Each spot is nudged to the nearest place the van can actually reach.
+function reachable(x, z) {
+  for (let ring = 0; ring < 12; ring++) {
+    for (let k = 0; k < Math.max(1, ring * 6); k++) {
+      const a = (k / Math.max(1, ring * 6)) * Math.PI * 2
+      const px = x + Math.cos(a) * ring * 0.8, pz = z + Math.sin(a) * ring * 0.8
+      if (Math.hypot(px, pz) > WORLD_RADIUS - 2) continue
+      if (COLLIDERS.every((c) => Math.hypot(px - c.x, pz - c.z) > c.r + 1.8)) return { x: px, z: pz }
+    }
+  }
+  return { x, z }
+}
+const oppositePier = PIER_ANGLE + Math.PI
+export const SHAGAI = [
+  { id: 'summit', ...reachable(SUMMIT.x - 1.5, SUMMIT.z + 1.5), hint: 'top of the birch hill' },
+  { id: 'cabin', ...reachable(campLocal(0, -5).x, campLocal(0, -5).z), hint: 'behind the cabin' },
+  { id: 'lake', ...reachable(LAKE.x + Math.cos(oppositePier) * (lakeRadius(oppositePier) + 2.5), LAKE.z + Math.sin(oppositePier) * (lakeRadius(oppositePier) + 2.5)), hint: 'far shore of the lake' },
+  { id: 'river', ...reachable(-44, 71.7), hint: 'in the river' },
+  { id: 'larch', ...reachable(HILLS[0].x + 3, HILLS[0].z - 2), hint: 'top of the larch hill' },
+  { id: 'ovoo', ...reachable(OVOO.x, OVOO.z - 6.5), hint: 'behind the ovoo' },
+  { id: 'bombsite', ...reachable(CRATES[1].x + 2.2, CRATES[1].z - 2.2), hint: 'behind the crates' },
+].map((s) => ({ ...s, y: Math.max(height(s.x, s.z), WATER_Y) }))
+
+// ── Race gate on the track from the start area towards the summit road ──
+export const RACE_GATE = (() => {
+  const [ax, az] = [0, 12], [bx, bz] = [4, 26]
+  const dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz)
+  return { x: ax + dx * 0.5, z: az + dz * 0.5, dirX: dx / l, dirZ: dz / l, ry: Math.atan2(dx, dz), half: 3.6 }
+})()
+COLLIDERS.push(
+  { x: RACE_GATE.x + RACE_GATE.dirZ * RACE_GATE.half, z: RACE_GATE.z - RACE_GATE.dirX * RACE_GATE.half, r: 0.3 },
+  { x: RACE_GATE.x - RACE_GATE.dirZ * RACE_GATE.half, z: RACE_GATE.z + RACE_GATE.dirX * RACE_GATE.half, r: 0.3 },
+)
+
+COLLIDERS.push({ x: zoneById.guestbook.x, z: zoneById.guestbook.z, r: 1.5 })
+
+// Naadam pieces (positions shared with colliders).
+export const NAADAM_SPOTS = {
+  wrestlers: { x: NAADAM.x - 2, z: NAADAM.z + 2 },
+  dancer: { x: NAADAM.x + 2.5, z: NAADAM.z + 4.5 },
+  archer: { x: NAADAM.x - 6, z: NAADAM.z - 5 },
+  targets: { x: NAADAM.x + 6.5, z: NAADAM.z - 5 },
+}
+COLLIDERS.push(
+  { ...NAADAM_SPOTS.wrestlers, r: 1.1 },
+  { ...NAADAM_SPOTS.dancer, r: 0.6 },
+  { ...NAADAM_SPOTS.archer, r: 0.6 },
+  { ...NAADAM_SPOTS.targets, r: 1.6 },
+  ...Array.from({ length: 9 }, (_, i) => {
+    const a = (i / 9) * Math.PI * 2
+    return { x: NAADAM.x + Math.cos(a) * NAADAM.r, z: NAADAM.z + Math.sin(a) * NAADAM.r, r: 0.3 }
+  }),
+)

@@ -49,27 +49,27 @@ function leafColor(t, season, c, extraSnow = 0) {
   return look
 }
 
-function Layer({ layer, li, season, geometry, material }) {
+function Layer({ layer, li, season, geometry, material, shadows }) {
   const ref = useInstances(conifers, conifers.length, (t, i, c) => {
     const look = leafColor(t, season, c, li * 0.12)
     // Larch sheds its needles in winter: a slimmer, twiggy crown.
     const k = look.bare ? 0.62 : t.species === 'larch' ? 0.85 : 1
     return { y: layer.y * t.s, sx: t.s * k * (t.species === 'larch' ? 0.82 : 1), sy: t.s * (t.species === 'larch' ? 1.12 : 1) }
   })
-  return <instancedMesh ref={ref} args={[geometry, material, conifers.length]} castShadow receiveShadow />
+  return <instancedMesh ref={ref} args={[geometry, material, conifers.length]} castShadow={shadows} receiveShadow />
 }
 
-function Blob({ blob, season, geometry, material }) {
+function Blob({ blob, season, geometry, material, shadows }) {
   const ref = useInstances(birches, birches.length, (t, i, c) => {
     const look = leafColor(t, season, c)
     const k = look.bare ? 0.55 : 1
     const ox = Math.cos(t.ry) * blob.x * t.s, oz = -Math.sin(t.ry) * blob.x * t.s
     return { x: t.x + ox, z: t.z + oz, y: blob.y * t.s, sx: blob.s * t.s * k, sy: blob.s * t.s * k * 1.15 }
   })
-  return <instancedMesh ref={ref} args={[geometry, material, birches.length]} castShadow receiveShadow />
+  return <instancedMesh ref={ref} args={[geometry, material, birches.length]} castShadow={shadows} receiveShadow />
 }
 
-export default function Trees() {
+export default function Trees({ quality }) {
   const season = useSeason()
   const res = useMemo(() => {
     const leafMat = new THREE.MeshStandardMaterial({ color: '#ffffff', flatShading: true, roughness: 0.9 })
@@ -94,10 +94,10 @@ export default function Trees() {
     <group>
       <instancedMesh ref={trunks} args={[res.trunk, res.trunkMat, TREES.length]} castShadow receiveShadow />
       {CONE_LAYERS.map((l, i) => (
-        <Layer key={i} layer={l} li={i} season={season} geometry={res.cones[i]} material={res.leafMat} />
+        <Layer key={i} layer={l} li={i} season={season} geometry={res.cones[i]} material={res.leafMat} shadows={quality.treeShadows} />
       ))}
       {BIRCH_BLOBS.map((b, i) => (
-        <Blob key={i} blob={b} season={season} geometry={res.blob} material={res.leafMat} />
+        <Blob key={i} blob={b} season={season} geometry={res.blob} material={res.leafMat} shadows={quality.treeShadows} />
       ))}
     </group>
   )

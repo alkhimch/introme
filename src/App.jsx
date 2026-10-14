@@ -5,10 +5,12 @@ import Lightbox from './components/Lightbox'
 import Panel from './components/Panel'
 import Radar from './components/Radar'
 import SeasonPicker from './components/SeasonPicker'
+import QualityPicker from './components/QualityPicker'
+import Extras, { PhotoBar } from './components/Extras'
 import { initAudio, setSeasonAudio, toggleMuted, useMuted } from './audio/sound'
 import TouchControls from './components/TouchControls'
 import useKeyboard from './components/useKeyboard'
-import { commands, setStarted, useSeason, useStarted, useTimeOfDay, useToast, useZone } from './world/store'
+import { commands, setStarted, usePhotoMode, useRain, useSeason, useStarted, useTimeOfDay, useToast, useZone } from './world/store'
 
 const World = lazy(() => import('./world/World'))
 
@@ -28,9 +30,11 @@ export default function App() {
   const zone = useZone()
   const toast = useToast()
   const muted = useMuted()
+  const photo = usePhotoMode()
   const season = useSeason()
   const timeOfDay = useTimeOfDay()
-  useEffect(() => { setSeasonAudio(season, timeOfDay) }, [season, timeOfDay])
+  const raining = useRain()
+  useEffect(() => { setSeasonAudio(season, timeOfDay, raining) }, [season, timeOfDay, raining])
 
   // Browsers only allow sound after a user gesture: start audio on the first click / key / touch.
   useEffect(() => {
@@ -61,7 +65,7 @@ export default function App() {
         <World photos={sources} onOpenPhoto={setOpen} mobile={isMobile} />
       </Suspense>
 
-      <header className="hud-top">
+      {!photo && <header className="hud-top">
         <div className="hud-left">
           <button className="logo" onClick={() => { commands.resetCount++ }} title="Back to start">alkhimch</button>
           <button
@@ -84,18 +88,20 @@ export default function App() {
           ))}
           <a href={profile.links.linkedin} target="_blank" rel="noreferrer" className="nav-cta">LinkedIn ↗</a>
         </nav>
-      </header>
+      </header>}
 
-      <Panel zone={zone && zone !== dismissed ? zone : null} onClose={() => setDismissed(zone)} photos={sources} onOpenPhoto={setOpen} />
+      <Panel zone={zone && zone !== dismissed && !photo ? zone : null} onClose={() => setDismissed(zone)} photos={sources} onOpenPhoto={setOpen} />
 
-      {started && !isTouch && (
+      {started && !photo && !isTouch && (
         <div className="hint" aria-hidden="true">
-          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · <kbd>1</kbd>–<kbd>4</kbd> season · <kbd>N</kbd> day/night
+          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> brake · <kbd>R</kbd> reset · <kbd>M</kbd> mute · <kbd>1</kbd>–<kbd>4</kbd> season · <kbd>N</kbd> day/night · <kbd>P</kbd> photo · <kbd>B</kbd> rain
         </div>
       )}
-      {started && isTouch && <TouchControls />}
-      {started && <Radar mobile={isMobile} />}
-      {started && <SeasonPicker />}
+      {started && !photo && isTouch && <TouchControls />}
+      {started && !photo && <Radar mobile={isMobile} />}
+      {started && !photo && <SeasonPicker />}
+      {started && !photo && <Extras />}
+      <PhotoBar />
 
       <div className={'intro' + (started ? ' gone' : '')} aria-hidden={started}>
         <div className="intro-card">
@@ -103,6 +109,7 @@ export default function App() {
           <h1>{profile.firstName} <span>{profile.lastName}</span></h1>
           <p className="intro-roles">{profile.roles.join(' · ')}</p>
           <p className="intro-text">Hop in the Purgon and drive across the Mongolian steppe to explore my work.</p>
+          <QualityPicker />
           <button className="btn primary" onClick={start}>Start driving</button>
           <p className="intro-small">{isTouch ? 'Use the on-screen pedals to drive · drag to look around.' : 'WASD or arrow keys · drag to look around · or use the menu above.'}</p>
         </div>

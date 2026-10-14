@@ -8,6 +8,7 @@ const ZONE_STYLE = {
   hobbies: { color: '#f08a3c', icon: 'H' },
   photos: { color: '#c48ef0', icon: 'P' },
   contact: { color: '#4fd18b', icon: 'C' },
+  guestbook: { color: '#f2d24c', icon: 'G' },
 }
 
 // Circular mini-map, rotated to match the follow camera so "up" means "into the screen".

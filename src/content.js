@@ -31,6 +31,16 @@ export const developer = {
   honors: ['National Mathematics Olympiad'],
 }
 
+// Guestbook powered by GitHub Discussions via giscus (https://giscus.app).
+// To switch it on: enable Discussions on the repo, install the giscus app, then copy
+// the repo id and category id that giscus.app shows into the fields below.
+export const guestbook = {
+  repo: 'alkhimch/introme',
+  repoId: 'R_kgDOGmwd6g',
+  category: 'Guestbook',
+  categoryId: '', // e.g. 'DIC_kwDO...' — leave empty until Discussions are enabled
+}
+
 export const hobbies = [
   { name: 'Basketball', text: 'Fast breaks and team play.' },
   { name: 'Football', text: 'The beautiful game — try scoring a goal with the van.' },

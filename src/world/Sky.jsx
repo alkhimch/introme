@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { rng } from './layout'
-import { useSeason, useTimeOfDay } from './store'
+import { useRain, useSeason, useTimeOfDay } from './store'
 import { environment } from './seasons'
 
 // Environment for the current season + time of day.
 export function useEnvironment() {
-  const season = useSeason(), time = useTimeOfDay()
-  return useMemo(() => environment(season, time), [season, time])
+  const season = useSeason(), time = useTimeOfDay(), rain = useRain()
+  return useMemo(() => environment(season, time, rain), [season, time, rain])
 }
 
 export function SkyDome() {

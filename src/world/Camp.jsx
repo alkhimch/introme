@@ -2,8 +2,9 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CAMP, CHILD, DOG_HOME, DOGHOUSE, SWING, WOMAN, campLocal, height } from './layout'
-import { car, useSeason } from './store'
+import { car, useQuality, useSeason } from './store'
 import { useEnvironment } from './Sky'
+import { QUALITY } from './quality'
 
 const Std = (props) => <meshStandardMaterial flatShading roughness={0.9} {...props} />
 
@@ -44,6 +45,7 @@ function Window({ position, ry = 0 }) {
 function Cabin() {
   const winter = useSeason() === 'winter'
   const lights = useEnvironment().lights
+  const nightLights = QUALITY[useQuality()].nightLights
   const tex = useMemo(logTexture, [])
   // Two storeys: ground floor F1 + upper floor F2.
   const W = 7, D = 4.6, F1 = 2.8, F2 = 2.6, H = F1 + F2, roofH = 1.9, base = 0.4
@@ -132,7 +134,7 @@ function Cabin() {
       {/* Porch lamp: warm light spilling onto the yard at night */}
       <mesh position={[0.9, base + 2.3, D / 2 + 0.12]}><boxGeometry args={[0.18, 0.26, 0.18]} /><Std color="#2b2420" /></mesh>
       <mesh position={[0.9, base + 2.25, D / 2 + 0.22]}><boxGeometry args={[0.12, 0.16, 0.04]} /><meshStandardMaterial color="#ffe2a0" emissive="#ffcf6a" emissiveIntensity={lights * 3} /></mesh>
-      {lights > 0 && <pointLight position={[0, base + 2.2, D / 2 + 2]} color="#ffc673" intensity={lights * 14} distance={16} decay={1.5} />}
+      {lights > 0 && nightLights && <pointLight position={[0, base + 2.2, D / 2 + 2]} color="#ffc673" intensity={lights * 14} distance={16} decay={1.5} />}
       {/* A little bench by the door */}
       <mesh position={[-2.6, 0.8, D / 2 + 0.6]} castShadow><boxGeometry args={[1.4, 0.1, 0.45]} /><Std color="#7a4f2c" /></mesh>
       {[-3.2, -2.0].map((x) => (

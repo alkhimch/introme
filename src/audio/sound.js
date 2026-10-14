@@ -13,12 +13,16 @@ const WIND = { spring: 0.022, summer: 0.025, autumn: 0.04, winter: 0.065 }
 
 let crickets = false
 let cricketTimer = 0
+let rainGain = null
+let rainLevel = 0
 
 // Stronger wind in autumn and winter; crickets on warm evenings and nights.
-export function setSeasonAudio(season, time = 'day') {
-  windLevel = (WIND[season] ?? 0.025) * (time === 'night' ? 0.7 : 1)
+export function setSeasonAudio(season, time = 'day', rain = false) {
+  windLevel = (WIND[season] ?? 0.025) * (time === 'night' ? 0.7 : 1) * (rain ? (season === 'winter' ? 2.6 : 1.4) : 1)
+  rainLevel = rain && season !== 'winter' ? 0.09 : 0
+  if (ctx && rainGain) rainGain.gain.setTargetAtTime(rainLevel, ctx.currentTime, 1.2)
   if (ctx && windGain) windGain.gain.setTargetAtTime(windLevel, ctx.currentTime, 1.5)
-  crickets = time !== 'day' && (season === 'summer' || season === 'spring' || season === 'autumn')
+  crickets = !rain && time !== 'day' && (season === 'summer' || season === 'spring' || season === 'autumn')
 }
 
 // A cricket: a few rapid high chirps.
@@ -93,6 +97,7 @@ export function initAudio() {
   screech = makeScreech()
   startMusic()
   startCrickets()
+  startRain()
   if (muted) ctx.suspend()
 
   document.addEventListener('visibilitychange', () => {
@@ -290,4 +295,31 @@ function startMusic() {
   schedule()
   clearInterval(musicTimer)
   musicTimer = setInterval(() => { if (ctx.state === 'running') schedule() }, 400)
+}
+
+// A bright little arpeggio for picking up a golden shagai (bigger when all are found).
+export function chime(big = false) {
+  if (!ctx || ctx.state !== 'running') return
+  const t = ctx.currentTime
+  const notes = big ? [72, 76, 79, 84, 88, 91] : [79, 84, 88]
+  notes.forEach((n, i) => {
+    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 440 * Math.pow(2, (n - 69) / 12)
+    const g = ctx.createGain()
+    const s = t + i * (big ? 0.09 : 0.07)
+    g.gain.setValueAtTime(0, s)
+    g.gain.linearRampToValueAtTime(0.12, s + 0.01)
+    g.gain.exponentialRampToValueAtTime(0.001, s + 0.6)
+    o.connect(g).connect(sfxBus)
+    o.start(s); o.stop(s + 0.65)
+  })
+}
+
+// Rain on the steppe: band-passed noise, faded in and out with the weather.
+function startRain() {
+  const src = noiseSource()
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 500
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200
+  rainGain = ctx.createGain(); rainGain.gain.value = rainLevel
+  src.connect(hp).connect(lp).connect(rainGain).connect(musicBus)
+  src.start()
 }

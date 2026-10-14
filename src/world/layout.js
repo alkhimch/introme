@@ -58,15 +58,44 @@ export const waterDistance = (x, z) => Math.min(riverDistance(x, z) - RIVER_HALF
 // Forested hills inside the valley (the car can drive up them).
 export const HILLS = [
   { x: -74, z: 14, r: 19, h: 16, mix: { larch: 0.6, pine: 0.4 } },
-  { x: 12, z: 56, r: 17, h: 13, mix: { birch: 0.55, larch: 0.45 } },
+  { x: 12, z: 56, r: 17, h: 15, mix: { birch: 0.55, larch: 0.45 }, smooth: true, plateau: 5.5 },
   { x: 70, z: -46, r: 16, h: 12, mix: { pine: 0.7, larch: 0.3 } },
 ]
 const hillShape = (d, r) => (d >= r ? 0 : Math.pow(0.5 + 0.5 * Math.cos((Math.PI * d) / r), 1.15))
+// Height of one hill at distance d: smooth hills have no bumps and a flat summit plateau.
+const hillHeight = (hl, d, x, z) => (d >= hl.r ? 0 : hl.h * hillShape(Math.max(d, hl.plateau || 0), hl.r) * (hl.smooth ? 1 : 0.9 + 0.1 * Math.sin(x * 0.4 + z * 0.3)))
 export function hillInfluence(x, z) {
   let m = 0
   for (const hl of HILLS) m = Math.max(m, hillShape(Math.hypot(x - hl.x, z - hl.z), hl.r))
   return m
 }
+
+// A switchback-free spiral track up the birch hill to a summit viewpoint.
+export const SUMMIT_HILL = HILLS[1]
+export const SUMMIT = { x: SUMMIT_HILL.x, z: SUMMIT_HILL.z }
+// The hill's own height (without the valley noise), used to lay the road at a steady grade.
+const hillOnly = (x, z) => hillHeight(SUMMIT_HILL, Math.hypot(x - SUMMIT_HILL.x, z - SUMMIT_HILL.z), x, z)
+export const HILL_ROAD = (() => {
+  const h = SUMMIT_HILL, GRADE = 0.12, STEP = 1.4
+  let a = Math.atan2(14 - h.z, 0 - h.x), r = h.r - 1
+  const pts = [[h.x + Math.cos(a) * r, h.z + Math.sin(a) * r]]
+  for (let i = 0; i < 400 && r > (h.plateau || 0) + 0.3; i++) {
+    // Walk around the hill; pick the radius that climbs by GRADE over this step.
+    const y0 = hillOnly(pts[pts.length - 1][0], pts[pts.length - 1][1])
+    a += STEP / Math.max(r, 2)
+    let lo = Math.max(0.5, r - STEP), hi = r
+    for (let k = 0; k < 20; k++) {
+      const mid = (lo + hi) / 2
+      const y = hillOnly(h.x + Math.cos(a) * mid, h.z + Math.sin(a) * mid)
+      if (y - y0 > GRADE * STEP) lo = mid; else hi = mid
+    }
+    r = (lo + hi) / 2
+    pts.push([h.x + Math.cos(a) * r, h.z + Math.sin(a) * r])
+  }
+  pts.push([h.x, h.z])
+  // Keep every third point so the path network stays light.
+  return pts.filter((_, i) => i % 3 === 0 || i === pts.length - 1)
+})()
 
 // Pastures for the herds.
 export const HORSE_HOME = { x: 62, z: -8 }
@@ -81,6 +110,8 @@ export const PATHS = [
   [[0, 12], [22, 18], [44, 24]],
   [[0, 12], [-12, 15], [-18, 16]],
   [[-18, 16], [-24, 25], [campLocal(0, 6).x, campLocal(0, 6).z]],
+  [[0, 12], [4, 26], HILL_ROAD[0]],
+  HILL_ROAD,
 ]
 
 const FLAT = [
@@ -119,13 +150,12 @@ export function height(x, z) {
   // Flat banks around the water, then carve the river bed and the lake basin.
   const dr = riverDistance(x, z), dl = lakeDistance(x, z)
   m = Math.min(m, smoothstep(RIVER_HALF_WIDTH, RIVER_HALF_WIDTH + 12, dr), smoothstep(0, 12, dl))
+  // The road hill is kept smooth so its track climbs at a steady grade.
+  for (const hl of HILLS) if (hl.smooth) m = Math.min(m, smoothstep(hl.r * 0.9, hl.r + 8, Math.hypot(x - hl.x, z - hl.z)))
   h *= m
   h -= 1.5 * smoothstep(RIVER_HALF_WIDTH + 1.2, RIVER_HALF_WIDTH * 0.3, dr)
   h -= 2.2 * smoothstep(1.5, -LAKE.r * 0.5, dl)
-  for (const hl of HILLS) {
-    const d = Math.hypot(x - hl.x, z - hl.z)
-    if (d < hl.r) h += hl.h * hillShape(d, hl.r) * (0.9 + 0.1 * Math.sin(x * 0.4 + z * 0.3))
-  }
+  for (const hl of HILLS) h += hillHeight(hl, Math.hypot(x - hl.x, z - hl.z), x, z)
   // Mountain ring around the valley.
   const r = Math.hypot(x, z), a = Math.atan2(z, x)
   const ridge = 18 + 8 * Math.sin(a * 5 + 1) + 4 * Math.sin(a * 11 + 2) + 2 * Math.sin(a * 23)
@@ -216,6 +246,7 @@ function makeTrees() {
       const a = r() * Math.PI * 2, d = Math.sqrt(r()) * hl.r * 0.82
       const x = hl.x + Math.cos(a) * d, z = hl.z + Math.sin(a) * d
       if (Math.hypot(x, z) > WORLD_RADIUS + 6) continue
+      if (pathDistance(x, z) < 3.2 || Math.hypot(x - SUMMIT.x, z - SUMMIT.z) < 5) continue
       const pick = r()
       let acc = 0, species = 'pine'
       for (const [sp, w] of Object.entries(hl.mix)) { acc += w; if (pick <= acc) { species = sp; break } }
@@ -242,3 +273,31 @@ export function pierLocal(lx, lz) {
   return { x: PIER.x + lx * c + lz * s, z: PIER.z - lx * s + lz * c }
 }
 COLLIDERS.push(...[1.2, 3.4, 5.6].map((lz) => ({ ...pierLocal(0, lz), r: 0.95 })), { ...pierLocal(1.75, 5.2), r: 1.1 })
+
+// Summit furniture: a flag (in a cairn) and a bench, placed where they are furthest from the road.
+function roadClearance(x, z) {
+  let best = Infinity
+  for (let i = 1; i < HILL_ROAD.length; i++) {
+    const [ax, az] = HILL_ROAD[i - 1], [bx, bz] = HILL_ROAD[i]
+    const dx = bx - ax, dz = bz - az
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)))
+    best = Math.min(best, Math.hypot(x - ax - dx * t, z - az - dz * t))
+  }
+  return best
+}
+function freeSpot(radius, avoid) {
+  let best = null
+  for (let k = 0; k < 72; k++) {
+    const a = (k / 72) * Math.PI * 2
+    const x = SUMMIT.x + Math.cos(a) * radius, z = SUMMIT.z + Math.sin(a) * radius
+    const score = Math.min(roadClearance(x, z), avoid ? Math.hypot(x - avoid.x, z - avoid.z) - 1 : Infinity)
+    if (!best || score > best.score) best = { x, z, a, score }
+  }
+  return best
+}
+const flagSpot = freeSpot(4.2)
+export const SUMMIT_FLAG = { x: flagSpot.x, z: flagSpot.z }
+const benchSpot = freeSpot(3.8, SUMMIT_FLAG)
+// The bench faces outwards, looking over the valley.
+export const SUMMIT_BENCH = { x: benchSpot.x, z: benchSpot.z, ry: Math.PI / 2 - benchSpot.a }
+COLLIDERS.push({ ...SUMMIT_FLAG, r: 0.85 }, { ...SUMMIT_BENCH, r: 0.8 })

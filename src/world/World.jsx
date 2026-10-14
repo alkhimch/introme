@@ -16,6 +16,7 @@ import Trees from './Trees'
 import Weather from './Weather'
 import Water from './Water'
 import Birds from './Birds'
+import Summit from './Summit'
 
 export default function World({ photos, onOpenPhoto, mobile }) {
   return (
@@ -45,6 +46,7 @@ export default function World({ photos, onOpenPhoto, mobile }) {
         <Hobbies />
         <Camp />
         <Herds />
+        <Summit />
       </Suspense>
     </Canvas>
   )

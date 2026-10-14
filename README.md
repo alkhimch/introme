@@ -10,7 +10,7 @@ Hop in a UAZ-452 "Purgon" and drive across a low-poly Mongolian steppe:
 - **Photographer** — framed prints standing in the grass (click to open)
 - **Contact** — an ovoo with khadag, and LinkedIn / GitHub signs
 
-Four seasons (spring, summer, autumn, winter) change the ground, grass, forests, sky, light and weather — falling snow, autumn leaves, spring petals. Three forested hills of pine, larch and birch rise inside the valley, and a river runs into a lake with a pier and a rowboat (both freeze in winter). Day, evening and night modes bring sunsets, stars and a moon, lit windows, glowing gers, van headlights, fireflies and crickets. Cranes migrate south in autumn; eagles circle the hills in spring and summer.
+Four seasons (spring, summer, autumn, winter) change the ground, grass, forests, sky, light and weather — falling snow, autumn leaves, spring petals. Three forested hills of pine, larch and birch rise inside the valley — a dirt track spirals up the birch hill to a summit with a Mongolian flag and a bench — and a river runs into a lake with a pier and a rowboat (both freeze in winter). Day, evening and night modes bring sunsets, stars and a moon, lit windows, glowing gers, van headlights, fireflies and crickets. Cranes migrate south in autumn; eagles circle the hills in spring and summer.
 
 Driving into a zone opens its info panel. The top menu teleports straight to any zone.
 Controls: WASD / arrow keys, Space to brake, R to reset, M to mute, 1–4 to change season, N for day/evening/night; drag to look around; on-screen pedals on touch devices.
